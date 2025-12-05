@@ -30,8 +30,11 @@ public class User {
     @Column(name = "nom")
     private String nom;
 
-    @Column(name = "prenom")
-    private String prenom;
+    @Column(name = "sexe")
+    private String sexe;
+
+    @Column(name = "tel")
+    private String numero;
 
     @Enumerated(EnumType.STRING)
     private Role role;

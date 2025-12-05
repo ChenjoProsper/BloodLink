@@ -1,7 +1,5 @@
 package com.bloodlinkproject.bloodlink.dto;
 
-import java.util.UUID;
-
 import javax.management.relation.Role;
 
 import jakarta.persistence.Enumerated;
@@ -21,12 +19,14 @@ public class MedecinRequest {
 
     private String nom;
 
-    private String prenom;
+    private String sexe;
 
     @NotNull
     @Enumerated
     private Role role;
 
     @NotNull
-    private UUID hopitalId;
+    private String adresse;
+
+    private String numero;
 }

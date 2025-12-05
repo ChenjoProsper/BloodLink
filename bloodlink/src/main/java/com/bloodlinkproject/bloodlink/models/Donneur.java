@@ -17,4 +17,7 @@ public class Donneur extends User {
     @Column(name = "longitude")
     private Long longitude;
 
+    @Column(name = "solde")
+    private Long solde = 0L;
+
 }

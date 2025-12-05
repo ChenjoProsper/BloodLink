@@ -13,4 +13,6 @@ public class AlerteRequest {
 
     @NotNull
     private UUID medecinId;
+
+    private Long remuneration;
 }

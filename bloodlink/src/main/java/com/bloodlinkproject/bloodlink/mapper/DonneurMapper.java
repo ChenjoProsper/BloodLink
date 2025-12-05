@@ -18,9 +18,10 @@ public class DonneurMapper {
         donneur.setLatitude(donneurRequest.getLatitude());
         donneur.setLongitude(donneurRequest.getLongitude());
         donneur.setNom(donneurRequest.getNom());
-        donneur.setPrenom(donneurRequest.getPrenom());
+        donneur.setSexe(donneurRequest.getSexe());
         donneur.setPassword(donneurRequest.getPassword());
         donneur.setRole(Role.DONNEUR);
+        donneur.setNumero(donneurRequest.getNuumro());
         return donneur;
     }
 
@@ -31,9 +32,11 @@ public class DonneurMapper {
         userResult.setEmail(donneur.getEmail());
         userResult.setNom(donneur.getNom());
         userResult.setPassword(donneur.getPassword());
-        userResult.setPrenom(donneur.getPrenom());
+        userResult.setSexe(donneur.getSexe());
         userResult.setRole(donneur.getRole().name());
         userResult.setUserId(donneur.getUserId());
+        userResult.setNumero(donneur.getNumero());
+        userResult.setSolde(donneur.getSolde());
         return userResult;
     }
 }

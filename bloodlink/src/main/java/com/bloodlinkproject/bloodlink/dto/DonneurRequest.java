@@ -16,7 +16,7 @@ public class DonneurRequest {
 
     private String nom;
 
-    private String prenom;
+    private String sexe;
 
     @NotNull
     private String gsang;
@@ -24,4 +24,6 @@ public class DonneurRequest {
     private Long latitude;
 
     private Long longitude; 
+    
+    private String nuumro;
 }

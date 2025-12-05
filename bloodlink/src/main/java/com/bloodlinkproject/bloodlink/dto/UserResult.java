@@ -15,7 +15,11 @@ public class UserResult {
 
     private String nom;
 
-    private String prenom;
+    private String sexe;
 
     private String role;
+
+    private String numero;
+
+    private Long solde;
 }

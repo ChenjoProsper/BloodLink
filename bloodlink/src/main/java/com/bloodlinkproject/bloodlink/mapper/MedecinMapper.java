@@ -1,5 +1,6 @@
 package com.bloodlinkproject.bloodlink.mapper;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import com.bloodlinkproject.bloodlink.dto.MedecinRequest;
@@ -13,12 +14,13 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MedecinMapper {
 
+    private final PasswordEncoder passwordEncoder;
 
     public Medecin toEntity(MedecinRequest medecinRequest){
         Medecin medecin = new Medecin();
         medecin.setEmail(medecinRequest.getEmail());
         medecin.setNom(medecinRequest.getNom());
-        medecin.setPassword(medecinRequest.getPassword());
+        medecin.setPassword(passwordEncoder.encode(medecinRequest.getPassword()));
         medecin.setSexe(medecinRequest.getSexe());
         medecin.setRole(Role.MEDECIN);
         medecin.setAdresse(medecinRequest.getAdresse());

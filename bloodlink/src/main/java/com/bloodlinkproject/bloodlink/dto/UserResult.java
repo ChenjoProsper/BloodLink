@@ -21,5 +21,5 @@ public class UserResult {
 
     private String numero;
 
-    private Long solde;
+    private double solde;
 }

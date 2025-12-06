@@ -1,5 +1,6 @@
 package com.bloodlinkproject.bloodlink.mapper;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import com.bloodlinkproject.bloodlink.dto.DonneurRequest;
@@ -7,9 +8,14 @@ import com.bloodlinkproject.bloodlink.dto.UserResult;
 import com.bloodlinkproject.bloodlink.models.Donneur;
 import com.bloodlinkproject.bloodlink.models.Role;
 
+import lombok.RequiredArgsConstructor;
+
 @Component
+@RequiredArgsConstructor
 public class DonneurMapper {
     
+    private final PasswordEncoder passwordEncoder;
+
     public Donneur toEntity(DonneurRequest donneurRequest){
 
         Donneur donneur = new Donneur();
@@ -19,9 +25,10 @@ public class DonneurMapper {
         donneur.setLongitude(donneurRequest.getLongitude());
         donneur.setNom(donneurRequest.getNom());
         donneur.setSexe(donneurRequest.getSexe());
-        donneur.setPassword(donneurRequest.getPassword());
+        donneur.setPassword(passwordEncoder.encode(donneurRequest.getPassword()));
         donneur.setRole(Role.DONNEUR);
-        donneur.setNumero(donneurRequest.getNuumro());
+        donneur.setNumero(donneurRequest.getNumero());
+        donneur.setSolde(0.0);
         return donneur;
     }
 

@@ -1,8 +1,5 @@
 package com.bloodlinkproject.bloodlink.dto;
 
-import javax.management.relation.Role;
-
-import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -20,10 +17,6 @@ public class MedecinRequest {
     private String nom;
 
     private String sexe;
-
-    @NotNull
-    @Enumerated
-    private Role role;
 
     @NotNull
     private String adresse;

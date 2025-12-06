@@ -1,5 +1,7 @@
 package com.bloodlinkproject.bloodlink.dto;
 
+import com.bloodlinkproject.bloodlink.models.GroupeSanguin;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -19,11 +21,11 @@ public class DonneurRequest {
     private String sexe;
 
     @NotNull
-    private String gsang;
+    private GroupeSanguin gsang;
 
-    private Long latitude;
+    private double latitude;
 
-    private Long longitude; 
+    private double longitude; 
     
-    private String nuumro;
+    private String numero;
 }

@@ -4,6 +4,8 @@ import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -19,8 +21,8 @@ public class Alerte {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID alerteId;
 
-    @Column(name = "groupe_sanguin",nullable = false)
-    private String gsang;
+    @Enumerated(EnumType.STRING)
+    private GroupeSanguin gsang;
 
     @Column(name = "description")
     private String description;
@@ -29,7 +31,7 @@ public class Alerte {
     private String etat = "EN COUR";
 
     @Column(name = "remuneration")
-    private Long remuneration = 0L;
+    private double remuneration = 0.0;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")

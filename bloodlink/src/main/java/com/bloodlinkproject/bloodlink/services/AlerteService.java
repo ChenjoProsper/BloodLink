@@ -12,5 +12,5 @@ import com.bloodlinkproject.bloodlink.models.Alerte;
 public interface AlerteService {
     
     public Alerte createAlerte(AlerteRequest alerteRequest);
-    public List<UserResult> recommandeDonne(Long latitude,Long longitude);
+    public List<UserResult> recommandeDonne(double latitude,double longitude);
 }

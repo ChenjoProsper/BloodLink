@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-BloodlinkApplication<bloodlink>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.bloodlinkproject.bloodlink.BloodlinkApplication",
+            "projectName": "bloodlink",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

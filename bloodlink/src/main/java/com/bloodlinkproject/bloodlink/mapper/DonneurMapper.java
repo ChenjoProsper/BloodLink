@@ -38,12 +38,14 @@ public class DonneurMapper {
 
         userResult.setEmail(donneur.getEmail());
         userResult.setNom(donneur.getNom());
-        userResult.setPassword(donneur.getPassword());
         userResult.setSexe(donneur.getSexe());
-        userResult.setRole(donneur.getRole().name());
         userResult.setUserId(donneur.getUserId());
         userResult.setNumero(donneur.getNumero());
         userResult.setSolde(donneur.getSolde());
+        userResult.setRole(donneur.getRole());
+        userResult.setGsang(donneur.getGsang());
+        userResult.setLatitude(donneur.getLatitude());
+        userResult.setLongitude(donneur.getLongitude());
         return userResult;
     }
 }

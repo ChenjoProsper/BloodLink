@@ -32,11 +32,11 @@ public class MedecinMapper {
         UserResult userResult = new UserResult();
         userResult.setEmail(medecin.getEmail());
         userResult.setNom(medecin.getNom());
-        userResult.setPassword(medecin.getPassword());
         userResult.setSexe(medecin.getSexe());
-        userResult.setRole(medecin.getRole().name());
+        userResult.setRole(medecin.getRole());
         userResult.setUserId(medecin.getUserId());
         userResult.setNumero(medecin.getNumero());
+        userResult.setAdresse(medecin.getAdresse());
         return userResult;
     }
 }

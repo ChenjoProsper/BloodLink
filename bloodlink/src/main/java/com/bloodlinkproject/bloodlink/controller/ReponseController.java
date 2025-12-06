@@ -1,5 +1,6 @@
 package com.bloodlinkproject.bloodlink.controller;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -8,7 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.bloodlinkproject.bloodlink.dto.ReponseRequest;
-import com.bloodlinkproject.bloodlink.dto.UserResult;
+import com.bloodlinkproject.bloodlink.dto.ReponseResult;
 import com.bloodlinkproject.bloodlink.services.ReponseService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,6 +17,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
 
 @RestController
 @RequestMapping("/api/v1/reponses")
@@ -33,10 +35,10 @@ public class ReponseController {
     @PostMapping("/accepter")
     @PreAuthorize("hasAuthority('DONNEUR')")
     @Operation(summary = "Accepter une demande de don", 
-               description = "Permet à un donneur d'accepter une alerte de don de sang")
-    public ResponseEntity<UserResult> accepterDemande(@Valid @RequestBody ReponseRequest reponseRequest) {
+                description = "Permet à un donneur d'accepter une alerte de don de sang")
+    public ResponseEntity<ReponseResult> accepterDemande(@Valid @RequestBody ReponseRequest reponseRequest) {
         try {
-            UserResult donneur = reponseService.accepterDemande(reponseRequest);
+            ReponseResult donneur = reponseService.accepterDemande(reponseRequest);
             return ResponseEntity.status(HttpStatus.CREATED).body(donneur);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -56,4 +58,13 @@ public class ReponseController {
         String message = reponseService.validerAlerte(reponseId);
         return ResponseEntity.ok(message);
     }
+
+    @GetMapping("/{alerteId}")
+    @PreAuthorize("hasAnyAuthority('MEDECIN', 'ADMIN')")
+    @Operation(summary = "Lister toutes les reponses d'une demande")
+    public ResponseEntity<List<ReponseResult>> getAllReponse(@PathVariable UUID alerteId) {
+        List<ReponseResult> reponseResults = reponseService.findAllResponse(alerteId);
+        return ResponseEntity.ok(reponseResults);
+    }
+    
 }

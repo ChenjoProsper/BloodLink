@@ -37,7 +37,7 @@ public class DonneurController {
     @PostMapping
     @PreAuthorize("hasAuthority('ADMIN')")
     @Operation(summary = "Créer un donneur (Admin)", 
-               description = "Permet à un admin de créer un donneur")
+                description = "Permet à un admin de créer un donneur")
     public ResponseEntity<UserResult> createDonneur(@Valid @RequestBody DonneurRequest donneurRequest) {
         UserResult donneur = donneurService.createDonne(donneurRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(donneur);

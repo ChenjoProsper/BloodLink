@@ -3,6 +3,7 @@ package com.bloodlinkproject.bloodlink.mapper;
 import org.springframework.stereotype.Component;
 
 import com.bloodlinkproject.bloodlink.dto.ReponseRequest;
+import com.bloodlinkproject.bloodlink.dto.ReponseResult;
 import com.bloodlinkproject.bloodlink.models.Alerte;
 import com.bloodlinkproject.bloodlink.models.Donneur;
 import com.bloodlinkproject.bloodlink.models.Reponse;
@@ -26,5 +27,15 @@ public class ReponseMapper {
         reponse.setAlerte(alerte);
         reponse.setDonneur(donneur);
         return reponse;
+    }
+    public ReponseResult toDto(Reponse reponse){
+        ReponseResult reponseResult = new ReponseResult();
+        reponseResult.setEmail(reponse.getDonneur().getEmail());
+        reponseResult.setNom(reponse.getDonneur().getNom());
+        reponseResult.setNumero(reponse.getDonneur().getNumero());
+        reponseResult.setSexe(reponse.getDonneur().getSexe());
+        reponseResult.setReponseId(reponse.getReponseId());
+
+        return reponseResult;
     }
 }

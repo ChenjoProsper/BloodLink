@@ -1,14 +1,14 @@
 package com.bloodlinkproject.bloodlink.services.impl;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
 import com.bloodlinkproject.bloodlink.dto.ReponseRequest;
-import com.bloodlinkproject.bloodlink.dto.UserResult;
-import com.bloodlinkproject.bloodlink.mapper.DonneurMapper;
+import com.bloodlinkproject.bloodlink.dto.ReponseResult;
+import com.bloodlinkproject.bloodlink.mapper.ReponseMapper;
 import com.bloodlinkproject.bloodlink.models.Alerte;
-import com.bloodlinkproject.bloodlink.models.Donneur;
 import com.bloodlinkproject.bloodlink.models.Reponse;
 import com.bloodlinkproject.bloodlink.repository.AlerteRepository;
 import com.bloodlinkproject.bloodlink.repository.DonneurRepository;
@@ -23,36 +23,39 @@ public class ReponseServiceImpl implements ReponseService {
     private final AlerteRepository alerteRepository;
     private final DonneurRepository donneurRepository;
     private final ReponseRepository reponseRepository;
-    private final DonneurMapper donneurMapper;
+    private final ReponseMapper reponseMapper;
 
     @Override
-    public UserResult accepterDemande(ReponseRequest reponseRequest){
+    public ReponseResult accepterDemande(ReponseRequest reponseRequest){
 
         Alerte alerte = alerteRepository.findById(reponseRequest.getAlerteId()).orElse(null);
 
         if(alerte.getEtat().equals("TERMINER")){
             throw new RuntimeException("La demande n'est plus en cours");
         }
-
-        Donneur donneur = donneurRepository.findById(reponseRequest.getDonneurId()).orElse(null);
-
-        Reponse reponse = new Reponse();
-        reponse.setAlerte(alerte);
-        reponse.setDonneur(donneur);
-
+        Reponse reponse = reponseMapper.toEntity(reponseRequest);
         reponseRepository.save(reponse);
 
-        return donneurMapper.toDto(donneur);
+        return reponseMapper.toDto(reponse);
     }
 
     @Override
     public String validerAlerte(UUID reponseId){
         Reponse reponse = reponseRepository.findById(reponseId).orElse(null);
 
+        if(reponse.getAlerte().getEtat().equals("TERMINER")){
+            throw new RuntimeException("La demande n'est plus en cours");
+        }
         reponse.getAlerte().setEtat("TERMINER");
         alerteRepository.save(reponse.getAlerte());
         reponse.getDonneur().setSolde(reponse.getDonneur().getSolde()+reponse.getAlerte().getRemuneration());
         donneurRepository.save(reponse.getDonneur());
         return "alerte "+reponse.getAlerte().getDescription()+ " terminer avec success !!";
+    }
+
+
+    @Override
+    public List<ReponseResult> findAllResponse(UUID alerteId){
+        return reponseRepository.findByAlerteAlerteId(alerteId).stream().map(reponseMapper::toDto).toList();
     }
 }

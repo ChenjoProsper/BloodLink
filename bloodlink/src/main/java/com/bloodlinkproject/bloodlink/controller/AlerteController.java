@@ -1,6 +1,7 @@
 package com.bloodlinkproject.bloodlink.controller;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,11 +47,10 @@ public class AlerteController {
     @GetMapping("/recommandations")
     @PreAuthorize("hasAuthority('MEDECIN')")
     @Operation(summary = "Obtenir des donneurs recommandés", 
-                description = "Trouve les donneurs dans un rayon de 5km autour d'une position")
+                description = "Trouve les donneurs dans un rayon de 5km autour d'une alerte")
     public ResponseEntity<List<UserResult>> recommandeDonneurs(
-            @RequestParam double latitude,
-            @RequestParam double longitude) {
-        List<UserResult> donneurs = alerteService.recommandeDonne(latitude, longitude);
+            @RequestParam UUID alerteId) {
+        List<UserResult> donneurs = alerteService.recommandeDonne(alerteId);
         return ResponseEntity.ok(donneurs);
     }
 }

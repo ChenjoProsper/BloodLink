@@ -39,6 +39,7 @@ public class DonneurServiceImpl implements DonneurService {
         Donneur donneur = donneurRepository.findById(donneurId).orElse(null);
         donneur.setLatitude(latitude);
         donneur.setLongitude(longitude);
+        donneurRepository.save(donneur);
 
         return "Position mis a jour avec success !!";
     }

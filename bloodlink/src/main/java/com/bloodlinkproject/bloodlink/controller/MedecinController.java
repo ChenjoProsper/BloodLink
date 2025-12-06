@@ -29,28 +29,17 @@ public class MedecinController {
 
     private final MedecinService medecinService;
 
-    /**
-     * Créer un nouveau médecin
-     * POST /api/v1/medecins
-     * Note: Cette route est redondante avec /api/v1/auth/register/medecin
-     */
     @PostMapping
     @PreAuthorize("hasAuthority('ADMIN')")
-    @Operation(summary = "Créer un médecin (Admin)", 
-               description = "Permet à un admin de créer un médecin")
+    @Operation(summary = "Créer un médecin (Admin)")
     public ResponseEntity<UserResult> createMedecin(@Valid @RequestBody MedecinRequest medecinRequest) {
         UserResult medecin = medecinService.createMedecin(medecinRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(medecin);
     }
 
-    /**
-     * Lister tous les médecins
-     * GET /api/v1/medecins
-     */
     @GetMapping
     @PreAuthorize("hasAnyAuthority('MEDECIN', 'ADMIN')")
-    @Operation(summary = "Lister tous les médecins", 
-               description = "Récupère la liste complète des médecins")
+    @Operation(summary = "Lister tous les médecins")
     public ResponseEntity<List<Medecin>> getAllMedecins() {
         List<Medecin> medecins = medecinService.afficheAllDonne();
         return ResponseEntity.ok(medecins);
@@ -58,33 +47,67 @@ public class MedecinController {
 
     /**
      * Obtenir les coordonnées GPS d'un médecin
-     * GET /api/v1/medecins/{medecinId}/coordonnees
      */
     @GetMapping("/{medecinId}/coordonnees")
     @PreAuthorize("hasAnyAuthority('MEDECIN', 'DONNEUR', 'ADMIN')")
-    @Operation(summary = "Obtenir les coordonnées d'un médecin", 
-               description = "Convertit l'adresse du médecin en coordonnées GPS")
-    public ResponseEntity<Map<String, Double>> getCoordonnesByMedecin(@PathVariable UUID medecinId) {
-        double[] coordonnees = medecinService.getCoordonnesByMedecin(medecinId);
-        return ResponseEntity.ok(Map.of(
-            "latitude", coordonnees[0],
-            "longitude", coordonnees[1]
-        ));
+    @Operation(summary = "Obtenir les coordonnées d'un médecin")
+    public ResponseEntity<?> getCoordonnesByMedecin(@PathVariable UUID medecinId) {
+        try {
+            double[] coordonnees = medecinService.getCoordonnesByMedecin(medecinId);
+            
+            // ✅ Vérification si coordonnees est null
+            if (coordonnees == null) {
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                        .body(Map.of(
+                            "error", "Impossible de géolocaliser l'adresse",
+                            "message", "Vérifiez votre clé API OpenCage ou l'adresse du médecin"
+                        ));
+            }
+            
+            return ResponseEntity.ok(Map.of(
+                "latitude", coordonnees[0],
+                "longitude", coordonnees[1]
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of(
+                        "error", "Erreur serveur",
+                        "message", e.getMessage()
+                    ));
+        }
     }
 
     /**
      * Obtenir les coordonnées GPS d'une adresse
-     * GET /api/v1/medecins/coordonnees?adresse=Hopital Central Yaounde
      */
     @GetMapping("/coordonnees")
     @PreAuthorize("hasAnyAuthority('MEDECIN', 'DONNEUR', 'ADMIN')")
-    @Operation(summary = "Obtenir les coordonnées d'une adresse", 
-                description = "Convertit une adresse en coordonnées GPS via API de géolocalisation")
-    public ResponseEntity<Map<String, Double>> getCoordonnesByAdresse(@RequestParam String adresse) {
-        double[] coordonnees = medecinService.getCoordonnesByAdresse(adresse);
-        return ResponseEntity.ok(Map.of(
-            "latitude", coordonnees[0],
-            "longitude", coordonnees[1]
-        ));
+    @Operation(summary = "Obtenir les coordonnées d'une adresse")
+    public ResponseEntity<?> getCoordonnesByAdresse(@RequestParam String adresse) {
+        try {
+            double[] coordonnees = medecinService.getCoordonnesByAdresse(adresse);
+            
+            // ✅ Vérification si coordonnees est null
+            if (coordonnees == null) {
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                        .body(Map.of(
+                            "error", "Impossible de géolocaliser l'adresse",
+                            "message", "Vérifiez votre clé API OpenCage ou l'adresse fournie",
+                            "adresse", adresse
+                        ));
+            }
+            
+            return ResponseEntity.ok(Map.of(
+                "adresse", adresse,
+                "latitude", coordonnees[0],
+                "longitude", coordonnees[1]
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of(
+                        "error", "Erreur serveur",
+                        "message", e.getMessage()
+                    ));
+        }
     }
 }

@@ -1,6 +1,7 @@
 package com.bloodlinkproject.bloodlink.services;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
@@ -12,5 +13,5 @@ import com.bloodlinkproject.bloodlink.models.Alerte;
 public interface AlerteService {
     
     public Alerte createAlerte(AlerteRequest alerteRequest);
-    public List<UserResult> recommandeDonne(double latitude,double longitude);
+    public List<UserResult> recommandeDonne(UUID alertId);
 }

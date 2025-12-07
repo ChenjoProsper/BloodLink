@@ -1,6 +1,6 @@
 class AppConfig {
   // URL de votre backend
-  static const String baseUrl = 'http://10.0.2.2:8000'; // Android Emulator
+  static const String baseUrl = 'http://192.168.211.74:8000'; // Android Emulator
   // static const String baseUrl = 'http://localhost:8086'; // iOS Simulator
   // static const String baseUrl = 'http://YOUR_IP:8086'; // Appareil physique
 

@@ -72,10 +72,10 @@ class _AlerteDetailsScreenState extends State<AlerteDetailsScreen> {
     }
 
     final alerteProvider = Provider.of<AlerteProvider>(context, listen: false);
-    
+
     final result = await alerteProvider.accepterAlerte(
       widget.alerte.alerteId!,
-      user.userId,
+      user!.userId,
     );
 
     setState(() {
@@ -164,15 +164,16 @@ class _AlerteDetailsScreenState extends State<AlerteDetailsScreen> {
 
     final lat = _medecinCoords!['latitude'];
     final lon = _medecinCoords!['longitude'];
-    
+
     // URL pour Google Maps
-    final url = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lon&travelmode=driving');
+    final url = Uri.parse(
+        'https://www.google.com/maps/dir/?api=1&destination=$lat,$lon&travelmode=driving');
 
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
     } else {
       if (!mounted) return;
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Impossible d\'ouvrir Google Maps'),
@@ -216,7 +217,8 @@ class _AlerteDetailsScreenState extends State<AlerteDetailsScreen> {
                   child: CircularProgressIndicator(),
                 ),
               )
-            else if (_medecinCoords != null && locationProvider.currentPosition != null)
+            else if (_medecinCoords != null &&
+                locationProvider.currentPosition != null)
               SizedBox(
                 height: 250,
                 child: GoogleMap(
@@ -282,7 +284,8 @@ class _AlerteDetailsScreenState extends State<AlerteDetailsScreen> {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.bloodGroupColors[widget.alerte.groupeSanguin] ??
+                      color: AppColors
+                              .bloodGroupColors[widget.alerte.groupeSanguin] ??
                           AppColors.primary,
                       borderRadius: BorderRadius.circular(20),
                     ),
@@ -321,7 +324,8 @@ class _AlerteDetailsScreenState extends State<AlerteDetailsScreen> {
                   _buildInfoCard(
                     icon: Icons.payments,
                     title: 'Rémunération',
-                    value: '${widget.alerte.remuneration.toStringAsFixed(0)} FCFA',
+                    value:
+                        '${widget.alerte.remuneration.toStringAsFixed(0)} FCFA',
                     color: Colors.green,
                   ),
                   const SizedBox(height: 12),
@@ -353,7 +357,8 @@ class _AlerteDetailsScreenState extends State<AlerteDetailsScreen> {
                           label: const Text('Refuser'),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
-                            side: const BorderSide(color: AppColors.error, width: 2),
+                            side: const BorderSide(
+                                color: AppColors.error, width: 2),
                             foregroundColor: AppColors.error,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -366,7 +371,11 @@ class _AlerteDetailsScreenState extends State<AlerteDetailsScreen> {
                         flex: 2,
                         child: CustomButton(
                           text: 'Accepter',
-                          onPressed: widget.alerte.etat == 'EN_COURS' ? _accepterAlerte : null,
+                        onPressed: widget.alerte.etat == 'EN_COURS'
+                            ? () {
+                                _accepterAlerte();
+                              }
+                            : () {},
                           isLoading: _isAccepting,
                           icon: Icons.check,
                           backgroundColor: AppColors.accent,
@@ -382,7 +391,8 @@ class _AlerteDetailsScreenState extends State<AlerteDetailsScreen> {
                       decoration: BoxDecoration(
                         color: Colors.orange.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                        border:
+                            Border.all(color: Colors.orange.withOpacity(0.3)),
                       ),
                       child: Row(
                         children: [
@@ -456,4 +466,28 @@ class _AlerteDetailsScreenState extends State<AlerteDetailsScreen> {
                   value,
                   style: const TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getEtatColor(String etat) {
+    switch (etat) {
+      case 'EN_COURS':
+        return AppColors.accent;
+      case 'TERMINER':
+        return Colors.grey;
+      case 'ANNULER':
+        return AppColors.error;
+      default:
+        return AppColors.textSecondary;
+    }
+  }
+}

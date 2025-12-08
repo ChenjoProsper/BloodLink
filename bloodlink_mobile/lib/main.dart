@@ -17,22 +17,32 @@ import 'providers/location_provider.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
-  print('Message reçu en arrière-plan: ${message.messageId}');
+  print('📬 Message reçu en arrière-plan: ${message.messageId}');
 }
 
 void main() async {
+  // Initialisation Flutter
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialisation Firebase
-  await Firebase.initializeApp();
-  
-  // Handler notifications en arrière-plan
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  try {
+    // Initialisation Firebase
+    await Firebase.initializeApp();
+    print('✅ Firebase initialisé');
+
+    // Handler notifications en arrière-plan
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  } catch (e) {
+    print('❌ Erreur initialisation Firebase: $e');
+  }
 
   // Initialisation des services
   await StorageService().init();
   ApiService().init();
   await NotificationService().initialize();
+
+  // Récupérer et afficher le FCM token
+  final fcmToken = await NotificationService().getToken();
+  print('📱 FCM Token: $fcmToken');
 
   runApp(const BloodLinkApp());
 }

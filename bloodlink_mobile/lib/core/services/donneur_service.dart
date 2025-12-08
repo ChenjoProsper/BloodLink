@@ -58,4 +58,17 @@ class DonneurService {
       return [];
     }
   }
+
+  /// Mettre à jour le FCM token
+  Future<void> updateFcmToken(String donneurId, String fcmToken) async {
+    try {
+      await _api.patch(
+        '${AppConfig.donneursEndpoint}/$donneurId/fcm-token',
+        data: {'fcmToken': fcmToken},
+      );
+      _logger.i('✅ FCM token envoyé au backend');
+    } catch (e) {
+      _logger.e('❌ Erreur envoi FCM token: $e');
+    }
+  }
 }

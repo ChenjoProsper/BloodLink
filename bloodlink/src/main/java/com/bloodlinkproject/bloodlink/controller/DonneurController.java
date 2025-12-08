@@ -1,6 +1,7 @@
 package com.bloodlinkproject.bloodlink.controller;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -63,7 +64,7 @@ public class DonneurController {
     @PatchMapping("/{donneurId}/position")
     @PreAuthorize("hasAuthority('DONNEUR')")
     @Operation(summary = "Mettre à jour la position", 
-               description = "Permet à un donneur de mettre à jour sa position GPS")
+                description = "Permet à un donneur de mettre à jour sa position GPS")
     public ResponseEntity<String> updatePosition(
             @PathVariable UUID donneurId,
             @RequestParam double latitude,
@@ -83,5 +84,26 @@ public class DonneurController {
     public ResponseEntity<Donneur> getDonneurById(@PathVariable UUID donneurId) {
         // Vous devrez ajouter cette méthode dans le service
         return ResponseEntity.ok().build(); // À compléter
+    }
+        /**
+     * Mettre à jour le FCM token du donneur
+     * PATCH /api/v1/donneurs/{donneurId}/fcm-token
+     */
+    @PatchMapping("/{donneurId}/fcm-token")
+    @PreAuthorize("hasAuthority('DONNEUR')")
+    @Operation(summary = "Mettre à jour le FCM token")
+    public ResponseEntity<String> updateFcmToken(
+            @PathVariable UUID donneurId,
+            @RequestBody Map<String, String> body) {
+        
+        String fcmToken = body.get("fcmToken");
+        if (fcmToken == null || fcmToken.isEmpty()) {
+            return ResponseEntity.badRequest().body("FCM token manquant");
+        }
+        
+        // TODO: Implémenter la sauvegarde du token dans la base
+        // donneurService.updateFcmToken(donneurId, fcmToken);
+        
+        return ResponseEntity.ok("FCM token mis à jour");
     }
 }

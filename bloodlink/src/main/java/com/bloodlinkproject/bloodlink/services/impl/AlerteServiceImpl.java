@@ -1,9 +1,8 @@
 package com.bloodlinkproject.bloodlink.services.impl;
 
 import java.util.List;
-import java.util.UUID;
+import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.bloodlinkproject.bloodlink.dto.AlerteRequest;
@@ -26,23 +25,34 @@ public class AlerteServiceImpl implements AlerteService {
     private final DonneurRepository donneurRepository;
     private final AlerteMapper alerteMapper;
     private final DonneurMapper donneurMapper;
-    @Value("${api.key}")
-    private String api_key;
 
     @Override
     public Alerte createAlerte(AlerteRequest alerteRequest){
         Alerte alerte = alerteMapper.toEntity(alerteRequest);
-
+        alerte.setEtat("EN_COURS"); // Définir l'état par défaut
         return alerteRepository.save(alerte);
     }
 
     @Override
-    public List<UserResult> recommandeDonne(UUID alerteId) {
-        Alerte alerte = alerteRepository.findById(alerteId).orElse(null);
-        double[] position = Utils.getCoordonnes(alerte.getMedecin().getAdresse(),api_key);
+    public List<UserResult> recommandeDonne(double latitude, double longitude) {
         return donneurRepository.findAll().stream()
-                .filter(e -> Utils.calculdist(e.getLatitude(), e.getLongitude(), position[0], position[1]) <= 5 && e.getGsang() == alerte.getGsang())
+                .filter(e -> Utils.calculdist(e.getLatitude(), e.getLongitude(), latitude, longitude) <= 5)
                 .map(donneurMapper::toDto)
                 .toList();
+    }
+
+    // NOUVELLES IMPLÉMENTATIONS
+    @Override
+    public List<Alerte> getAlertesActives() {
+        return alerteRepository.findAll().stream()
+                .filter(alerte -> "EN_COURS".equals(alerte.getEtat()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Alerte> getAlertesByMedecin(String medecinId) {
+        return alerteRepository.findAll().stream()
+                .filter(alerte -> medecinId.equals(alerte.getMedecin().getUserId()))
+                .collect(Collectors.toList());
     }
 }

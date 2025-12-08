@@ -57,26 +57,32 @@ class _DonneurHomeScreenState extends State<DonneurHomeScreen> {
     }
   }
 
-  /// Charger les alertes disponibles
+  /// Charger les alertes disponibles depuis le backend
   Future<void> _loadAlertes() async {
     setState(() {
       _isLoading = true;
     });
 
     try {
-      // TODO: Créer un endpoint backend pour récupérer les alertes actives
-      // Pour l'instant, on simule avec une liste vide
-      // Dans une version réelle, faire: await _api.get('/api/v1/alertes/actives')
+      // Appel à l'endpoint /api/v1/alertes/actives
+      final response = await _api.get('/api/v1/alertes/actives');
 
-      await Future.delayed(const Duration(seconds: 1));
-
-      setState(() {
-        _alertes = [];
-        _isLoading = false;
-      });
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        setState(() {
+          _alertes = data.map((json) => Alerte.fromJson(json)).toList();
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _alertes = [];
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       print('Erreur chargement alertes: $e');
       setState(() {
+        _alertes = [];
         _isLoading = false;
       });
     }

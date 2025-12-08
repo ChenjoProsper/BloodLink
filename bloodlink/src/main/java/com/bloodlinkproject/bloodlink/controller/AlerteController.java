@@ -1,7 +1,6 @@
 package com.bloodlinkproject.bloodlink.controller;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,10 +33,34 @@ public class AlerteController {
      */
     @PostMapping
     @PreAuthorize("hasAuthority('MEDECIN')")
-    @Operation(summary = "Créer une alerte", description = "Permet à un médecin de créer une alerte de don de sang")
+    @Operation(summary = "Créer une alerte")
     public ResponseEntity<Alerte> createAlerte(@Valid @RequestBody AlerteRequest alerteRequest) {
         Alerte alerte = alerteService.createAlerte(alerteRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(alerte);
+    }
+
+    /**
+     * NOUVEAU : Récupérer toutes les alertes actives
+     * GET /api/v1/alertes/actives
+     */
+    @GetMapping("/actives")
+    @PreAuthorize("hasAnyAuthority('DONNEUR', 'MEDECIN', 'ADMIN')")
+    @Operation(summary = "Récupérer toutes les alertes actives")
+    public ResponseEntity<List<Alerte>> getAlertesActives() {
+        List<Alerte> alertes = alerteService.getAlertesActives();
+        return ResponseEntity.ok(alertes);
+    }
+
+    /**
+     * NOUVEAU : Récupérer les alertes d'un médecin
+     * GET /api/v1/alertes/medecin/{medecinId}
+     */
+    @GetMapping("/medecin/{medecinId}")
+    @PreAuthorize("hasAuthority('MEDECIN')")
+    @Operation(summary = "Récupérer les alertes d'un médecin")
+    public ResponseEntity<List<Alerte>> getAlertesByMedecin(@PathVariable String medecinId) {
+        List<Alerte> alertes = alerteService.getAlertesByMedecin(medecinId);
+        return ResponseEntity.ok(alertes);
     }
 
     /**
@@ -46,11 +69,11 @@ public class AlerteController {
      */
     @GetMapping("/recommandations")
     @PreAuthorize("hasAuthority('MEDECIN')")
-    @Operation(summary = "Obtenir des donneurs recommandés", 
-                description = "Trouve les donneurs dans un rayon de 5km autour d'une alerte")
+    @Operation(summary = "Obtenir des donneurs recommandés")
     public ResponseEntity<List<UserResult>> recommandeDonneurs(
-            @RequestParam UUID alerteId) {
-        List<UserResult> donneurs = alerteService.recommandeDonne(alerteId);
+            @RequestParam double latitude,
+            @RequestParam double longitude) {
+        List<UserResult> donneurs = alerteService.recommandeDonne(latitude, longitude);
         return ResponseEntity.ok(donneurs);
     }
 }

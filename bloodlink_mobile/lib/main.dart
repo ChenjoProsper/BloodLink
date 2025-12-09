@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -13,11 +14,13 @@ import 'providers/auth_provider.dart';
 import 'providers/alerte_provider.dart';
 import 'providers/location_provider.dart';
 
-// Handler pour les notifications en arrière-plan
+// Handler pour les notifications en arrière-plan (MOBILE UNIQUEMENT)
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
-  print('📬 Message reçu en arrière-plan: ${message.messageId}');
+  if (!kIsWeb) {
+    await Firebase.initializeApp();
+    print('📬 Message reçu en arrière-plan: ${message.messageId}');
+  }
 }
 
 void main() async {
@@ -25,12 +28,16 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
-    // Initialisation Firebase
-    await Firebase.initializeApp();
-    print('✅ Firebase initialisé');
-
-    // Handler notifications en arrière-plan
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    // ✅ Initialisation Firebase UNIQUEMENT pour mobile
+    if (!kIsWeb) {
+      await Firebase.initializeApp();
+      print('✅ Firebase initialisé (Mobile)');
+      
+      // Handler notifications en arrière-plan
+      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    } else {
+      print('⚠️ Firebase désactivé pour Web');
+    }
   } catch (e) {
     print('❌ Erreur initialisation Firebase: $e');
   }
@@ -38,11 +45,17 @@ void main() async {
   // Initialisation des services
   await StorageService().init();
   ApiService().init();
-  await NotificationService().initialize();
-
-  // Récupérer et afficher le FCM token
-  final fcmToken = await NotificationService().getToken();
-  print('📱 FCM Token: $fcmToken');
+  
+  // ✅ Initialisation notifications UNIQUEMENT pour mobile
+  if (!kIsWeb) {
+    try {
+      await NotificationService().initialize();
+      final fcmToken = await NotificationService().getToken();
+      print('📱 FCM Token: $fcmToken');
+    } catch (e) {
+      print('⚠️ Erreur notifications: $e');
+    }
+  }
 
   runApp(const BloodLinkApp());
 }

@@ -18,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.http.HttpMethod; // 💡 NOUVEL IMPORT NÉCESSAIRE
 
 import com.bloodlinkproject.bloodlink.repository.UserRepository;
 
@@ -38,7 +39,17 @@ public class SecurityConfiguration {
     .cors(cors -> cors.configurationSource(corsConfigurationSource))
 
     .authorizeHttpRequests(auth -> auth
-        .requestMatchers("/api/v1/auth/**").permitAll()
+        // 🚀 CORRECTION : Rendre les requêtes d'authentification POST explicites
+        // Ceci résout le 403 Forbidden sur l'inscription du donneur.
+        .requestMatchers(HttpMethod.POST, "/api/v1/auth/register/donneur").permitAll()
+        .requestMatchers(HttpMethod.POST, "/api/v1/auth/register/medecin").permitAll()
+        .requestMatchers(HttpMethod.GET, "/api/v1/alertes/actives").hasAnyAuthority("DONNEUR", "MEDECIN")
+        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
+        
+        // Autoriser le reste des endpoints /api/v1/auth/ (ex: GET /api/v1/auth/status, etc.)
+        .requestMatchers("/api/v1/auth/**").permitAll() 
+        
+        // Autoriser Swagger/OpenAPI
         .requestMatchers(
             "/swagger-ui/**",
             "/swagger-ui.html",

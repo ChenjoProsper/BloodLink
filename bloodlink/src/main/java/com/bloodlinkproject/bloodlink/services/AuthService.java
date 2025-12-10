@@ -50,6 +50,7 @@ public class AuthService {
                 .token(token)
                 .email(savedUser.getEmail())
                 .role(savedUser.getRole().name())
+                .userId(savedUser.getUserId())
                 .message("Donneur inscrit avec succès")
                 .build();
     }
@@ -77,6 +78,7 @@ public class AuthService {
                 .token(token)
                 .email(savedUser.getEmail())
                 .role(savedUser.getRole().name())
+                .userId(savedUser.getUserId())
                 .message("Médecin inscrit avec succès")
                 .build();
     }
@@ -104,6 +106,7 @@ public class AuthService {
                 .token(token)
                 .email(user.getEmail())
                 .role(user.getRole().name())
+                .userId(user.getUserId())
                 .message("Connexion réussie")
                 .build();
     }

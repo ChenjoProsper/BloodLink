@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/alerte_provider.dart';
-import '../../providers/auth_provider.dart';
-import '../../providers/location_provider.dart';
+// import '../../providers/auth_provider.dart';
+// import '../../providers/location_provider.dart';
 import '../../core/services/medecin_service.dart';
 import '../../core/services/storage_service.dart';
 import '../../widgets/custom_button.dart';
@@ -24,21 +24,21 @@ class _CreateAlerteScreenState extends State<CreateAlerteScreen> {
   final _medecinService = MedecinService();
   final _storage = StorageService();
 
-  String? _selectedGroupeSanguin;
+  String? _selectedgsang;
   Map<String, double>? _medecinCoords;
   List<dynamic> _donneurRecommandes = [];
   bool _isLoadingCoords = false;
   bool _showRecommandations = false;
 
   final List<String> _groupesSanguins = [
-    'A_PLUS',
-    'A_MINUS',
-    'B_PLUS',
-    'B_MINUS',
-    'AB_PLUS',
-    'AB_MINUS',
-    'O_PLUS',
-    'O_MINUS',
+    'A_POSITIF',
+    'A_NEGATIF',
+    'B_POSITIF',
+    'B_NEGATIF',
+    'AB_POSITIF',
+    'AB_NEGATIF',
+    'O_POSITIF',
+    'O_NEGATIF',
   ];
 
   @override
@@ -119,7 +119,7 @@ class _CreateAlerteScreenState extends State<CreateAlerteScreen> {
   Future<void> _createAlerte() async {
     FocusScope.of(context).unfocus();
 
-    if (!_formKey.currentState!.validate() || _selectedGroupeSanguin == null) {
+    if (!_formKey.currentState!.validate() || _selectedgsang == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Veuillez remplir tous les champs obligatoires'),
@@ -155,7 +155,7 @@ class _CreateAlerteScreenState extends State<CreateAlerteScreen> {
 
     final alerte = Alerte(
       description: _descriptionController.text.trim(),
-      groupeSanguin: _selectedGroupeSanguin!,
+      gsang: _selectedgsang!,
       remuneration: double.tryParse(_remunerationController.text) ?? 0,
       medecinId: user!.userId,
       latitude: _medecinCoords!['latitude'],
@@ -346,7 +346,7 @@ class _CreateAlerteScreenState extends State<CreateAlerteScreen> {
                               border: Border.all(color: Colors.grey),
                             ),
                             child: DropdownButtonFormField<String>(
-                              value: _selectedGroupeSanguin,
+                              value: _selectedgsang,
                               decoration: const InputDecoration(
                                 border: InputBorder.none,
                                 contentPadding:
@@ -378,7 +378,7 @@ class _CreateAlerteScreenState extends State<CreateAlerteScreen> {
                               }).toList(),
                               onChanged: (value) {
                                 setState(() {
-                                  _selectedGroupeSanguin = value;
+                                  _selectedgsang = value;
                                 });
                               },
                             ),

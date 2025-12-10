@@ -3,6 +3,7 @@ package com.bloodlinkproject.bloodlink.mapper;
 import org.springframework.stereotype.Component;
 
 import com.bloodlinkproject.bloodlink.dto.AlerteRequest;
+import com.bloodlinkproject.bloodlink.dto.AlerteResult;
 import com.bloodlinkproject.bloodlink.models.Alerte;
 import com.bloodlinkproject.bloodlink.models.Medecin;
 import com.bloodlinkproject.bloodlink.repository.MedecinRepository;
@@ -27,5 +28,13 @@ public class AlerteMapper {
         return alerte;
     }
 
+    public AlerteResult toDto(Alerte alerte){
+        AlerteResult alerteResult = new AlerteResult();
+        alerteResult.setAdresse(alerte.getMedecin().getAdresse());
+        alerteResult.setDescription(alerte.getDescription());
+        alerteResult.setRemuneration(alerte.getRemuneration());
+        alerteResult.setAlerteId(alerte.getAlerteId());
+        return alerteResult;
+    }
 
 }

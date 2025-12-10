@@ -8,6 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.bloodlinkproject.bloodlink.dto.AlerteRequest;
+import com.bloodlinkproject.bloodlink.dto.AlerteResult;
 import com.bloodlinkproject.bloodlink.dto.UserResult;
 import com.bloodlinkproject.bloodlink.models.Alerte;
 import com.bloodlinkproject.bloodlink.services.AlerteService;
@@ -46,8 +47,8 @@ public class AlerteController {
     @GetMapping("/actives")
     @PreAuthorize("hasAnyAuthority('DONNEUR', 'MEDECIN', 'ADMIN')")
     @Operation(summary = "Récupérer toutes les alertes actives")
-    public ResponseEntity<List<Alerte>> getAlertesActives() {
-        List<Alerte> alertes = alerteService.getAlertesActives();
+    public ResponseEntity<List<AlerteResult>> getAlertesActives() {
+        List<AlerteResult> alertes = alerteService.getAlertesActives();
         return ResponseEntity.ok(alertes);
     }
 
@@ -58,8 +59,8 @@ public class AlerteController {
     @GetMapping("/medecin/{medecinId}")
     @PreAuthorize("hasAuthority('MEDECIN')")
     @Operation(summary = "Récupérer les alertes d'un médecin")
-    public ResponseEntity<List<Alerte>> getAlertesByMedecin(@PathVariable String medecinId) {
-        List<Alerte> alertes = alerteService.getAlertesByMedecin(medecinId);
+    public ResponseEntity<List<AlerteResult>> getAlertesByMedecin(@PathVariable String medecinId) {
+        List<AlerteResult> alertes = alerteService.getAlertesByMedecin(medecinId);
         return ResponseEntity.ok(alertes);
     }
 

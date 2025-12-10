@@ -43,4 +43,9 @@ public class DonneurServiceImpl implements DonneurService {
 
         return "Position mis a jour avec success !!";
     }
+
+    @Override
+    public Donneur findById(UUID donneurId){
+        return donneurRepository.findById(donneurId).orElse(null);
+    }
 }

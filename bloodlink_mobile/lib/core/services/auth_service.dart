@@ -31,7 +31,7 @@ class AuthService {
 
         // Sauvegarder les infos utilisateur
         final user = User(
-          userId: '', // On le récupérera plus tard si nécessaire
+          userId: data['userId'] ?? '',
           email: data['email'],
           nom: data['nom'] ?? '',
           role: data['role'],
@@ -44,6 +44,7 @@ class AuthService {
           'success': true,
           'token': data['token'],
           'role': data['role'],
+          'userId': data['userId'],
           'email': data['email'],
           'message': data['message'],
         };
@@ -126,7 +127,7 @@ class AuthService {
 
         // Sauvegarder l'utilisateur
         final user = User(
-          userId: '',
+          userId: data['userId'] ?? '',
           email: data['email'],
           nom: nom,
           role: data['role'],
@@ -200,7 +201,7 @@ class AuthService {
         await _storage.saveToken(data['token']);
 
         final user = User(
-          userId: '',
+          userId: data['userId'] ?? '',
           email: data['email'],
           nom: nom,
           role: data['role'],

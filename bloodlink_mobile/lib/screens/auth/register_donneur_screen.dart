@@ -28,20 +28,26 @@ class _RegisterDonneurScreenState extends State<RegisterDonneurScreen> {
 
   final List<String> _sexes = ['M', 'F'];
   final List<String> _groupesSanguins = [
-    'A_PLUS',
-    'A_MINUS',
-    'B_PLUS',
-    'B_MINUS',
-    'AB_PLUS',
-    'AB_MINUS',
-    'O_PLUS',
-    'O_MINUS',
+    'A_POSITIF',
+    'A_NEGATIF',
+    'B_POSITIF',
+    'B_NEGATIF',
+    'AB_POSITIF',
+    'AB_NEGATIF',
+    'O_POSITIF',
+    'O_NEGATIF',
   ];
 
   @override
   void initState() {
     super.initState();
-    _getInitialLocation();
+    // 🚀 CORRECTION : Décaler l'appel à la localisation après le premier frame.
+    // Ceci résout l'erreur "setState() or markNeedsBuild() called during build"
+    // car cela permet au widget d'être monté (built) avant que le Provider
+    // ne tente de notifier les écouteurs.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _getInitialLocation();
+    });
   }
 
   @override
@@ -55,6 +61,9 @@ class _RegisterDonneurScreenState extends State<RegisterDonneurScreen> {
 
   /// Récupère la position dès l'ouverture de l'écran
   Future<void> _getInitialLocation() async {
+    // Vérifie si le widget est encore monté avant d'appeler setState
+    if (!mounted) return;
+
     setState(() {
       _isGettingLocation = true;
     });
@@ -62,6 +71,9 @@ class _RegisterDonneurScreenState extends State<RegisterDonneurScreen> {
     final locationProvider =
         Provider.of<LocationProvider>(context, listen: false);
     await locationProvider.getCurrentPosition();
+
+    // Vérifie si le widget est encore monté avant d'appeler setState
+    if (!mounted) return;
 
     setState(() {
       _isGettingLocation = false;
@@ -90,6 +102,7 @@ class _RegisterDonneurScreenState extends State<RegisterDonneurScreen> {
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
+                // Si l'utilisateur annule, revenir à l'écran précédent
                 Navigator.pop(context);
               },
               child: const Text('Annuler'),
@@ -97,6 +110,7 @@ class _RegisterDonneurScreenState extends State<RegisterDonneurScreen> {
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
+                // Réessayer la récupération après avoir fermé la boîte de dialogue
                 _getInitialLocation();
               },
               child: const Text('Réessayer'),
@@ -285,7 +299,7 @@ class _RegisterDonneurScreenState extends State<RegisterDonneurScreen> {
                       // Nom
                       CustomTextField(
                         label: 'Nom complet',
-                        hint: 'Jean Dupont',
+                        hint: 'Joe Johns',
                         controller: _nomController,
                         prefixIcon: Icons.person_outlined,
                         validator: Validators.required,
@@ -478,6 +492,7 @@ class _RegisterDonneurScreenState extends State<RegisterDonneurScreen> {
                           ),
                           TextButton(
                             onPressed: () {
+                              // Revenir aux écrans précédents (Login/Role Selection)
                               Navigator.pop(context);
                               Navigator.pop(context);
                             },

@@ -284,13 +284,12 @@ class _AlerteDetailsScreenState extends State<AlerteDetailsScreen> {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors
-                              .bloodGroupColors[widget.alerte.groupeSanguin] ??
+                      color: AppColors.bloodGroupColors[widget.alerte.gsang] ??
                           AppColors.primary,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      widget.alerte.groupeSanguin.replaceAll('_', ' '),
+                      widget.alerte.gsang.replaceAll('_', ' '),
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -311,7 +310,7 @@ class _AlerteDetailsScreenState extends State<AlerteDetailsScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    widget.alerte.description,
+                    widget.alerte.description!,
                     style: const TextStyle(
                       fontSize: 16,
                       color: AppColors.textSecondary,
@@ -325,7 +324,7 @@ class _AlerteDetailsScreenState extends State<AlerteDetailsScreen> {
                     icon: Icons.payments,
                     title: 'Rémunération',
                     value:
-                        '${widget.alerte.remuneration.toStringAsFixed(0)} FCFA',
+                        '${widget.alerte.remuneration!.toStringAsFixed(0)} FCFA',
                     color: Colors.green,
                   ),
                   const SizedBox(height: 12),
@@ -371,11 +370,11 @@ class _AlerteDetailsScreenState extends State<AlerteDetailsScreen> {
                         flex: 2,
                         child: CustomButton(
                           text: 'Accepter',
-                        onPressed: widget.alerte.etat == 'EN_COURS'
-                            ? () {
-                                _accepterAlerte();
-                              }
-                            : () {},
+                          onPressed: widget.alerte.etat == 'EN_COURS'
+                              ? () {
+                                  _accepterAlerte();
+                                }
+                              : () {},
                           isLoading: _isAccepting,
                           icon: Icons.check,
                           backgroundColor: AppColors.accent,

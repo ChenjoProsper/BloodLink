@@ -1,8 +1,8 @@
 class Alerte {
   final String? alerteId;
-  final String description;
-  final String groupeSanguin;
-  final double remuneration;
+  final String? description;
+  final String gsang;
+  final double? remuneration;
   final String medecinId;
   final double? latitude;
   final double? longitude;
@@ -11,9 +11,9 @@ class Alerte {
 
   Alerte({
     this.alerteId,
-    required this.description,
-    required this.groupeSanguin,
-    required this.remuneration,
+    this.description,
+    required this.gsang,
+    this.remuneration,
     required this.medecinId,
     this.latitude,
     this.longitude,
@@ -25,7 +25,7 @@ class Alerte {
     return Alerte(
       alerteId: json['alerteId']?.toString(),
       description: json['description'] ?? '',
-      groupeSanguin: json['groupeSanguin'] ?? json['gsang'] ?? 'O_PLUS',
+      gsang: json['gsang'] ?? json['gsang'] ?? 'O_PLUS',
       remuneration: (json['remuneration'] ?? 0).toDouble(),
       medecinId: json['medecinId']?.toString() ?? '',
       latitude: json['latitude'] != null
@@ -45,7 +45,7 @@ class Alerte {
     return {
       if (alerteId != null) 'alerteId': alerteId,
       'description': description,
-      'groupeSanguin': groupeSanguin,
+      'gsang': gsang,
       'remuneration': remuneration,
       'medecinId': medecinId,
       if (latitude != null) 'latitude': latitude,

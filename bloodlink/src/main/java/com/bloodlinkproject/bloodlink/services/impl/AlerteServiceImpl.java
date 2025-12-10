@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import com.bloodlinkproject.bloodlink.dto.AlerteRequest;
+import com.bloodlinkproject.bloodlink.dto.AlerteResult;
 import com.bloodlinkproject.bloodlink.dto.UserResult;
 import com.bloodlinkproject.bloodlink.mapper.AlerteMapper;
 import com.bloodlinkproject.bloodlink.mapper.DonneurMapper;
@@ -43,16 +44,16 @@ public class AlerteServiceImpl implements AlerteService {
 
     // NOUVELLES IMPLÉMENTATIONS
     @Override
-    public List<Alerte> getAlertesActives() {
+    public List<AlerteResult> getAlertesActives() {
         return alerteRepository.findAll().stream()
                 .filter(alerte -> "EN_COURS".equals(alerte.getEtat()))
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()).stream().map(alerteMapper::toDto).toList();
     }
 
     @Override
-    public List<Alerte> getAlertesByMedecin(String medecinId) {
+    public List<AlerteResult> getAlertesByMedecin(String medecinId) {
         return alerteRepository.findAll().stream()
                 .filter(alerte -> medecinId.equals(alerte.getMedecin().getUserId()))
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()).stream().map(alerteMapper::toDto).toList();
     }
 }

@@ -16,6 +16,8 @@ class MedecinService {
         '${AppConfig.medecinsEndpoint}/$medecinId/coordonnees',
       );
 
+      _logger.e("id: $medecinId");
+
       if (response.statusCode == 200) {
         final data = response.data as Map<String, dynamic>;
         return {

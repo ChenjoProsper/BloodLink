@@ -82,8 +82,7 @@ public class DonneurController {
     @Operation(summary = "Obtenir un donneur par ID", 
                 description = "Récupère les informations d'un donneur spécifique")
     public ResponseEntity<Donneur> getDonneurById(@PathVariable UUID donneurId) {
-        // Vous devrez ajouter cette méthode dans le service
-        return ResponseEntity.ok().build(); // À compléter
+        return ResponseEntity.ok(donneurService.findById(donneurId));
     }
         /**
      * Mettre à jour le FCM token du donneur

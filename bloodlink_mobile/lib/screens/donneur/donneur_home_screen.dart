@@ -22,8 +22,12 @@ class DonneurHomeScreen extends StatefulWidget {
 class _DonneurHomeScreenState extends State<DonneurHomeScreen> {
   int _currentIndex = 0;
   List<Alerte> _alertes = [];
-  Donneur? _donneurData;
+  // 💡 Nouveaux états pour l'historique des réponses
+  List<dynamic> _responseHistory = [];
   bool _isLoading = false;
+  bool _isLoadingHistory =
+      false; // 💡 Nouvel état de chargement pour l'historique
+  Donneur? _donneurData;
   final _api = ApiService();
   final _storage = StorageService();
 
@@ -36,6 +40,8 @@ class _DonneurHomeScreenState extends State<DonneurHomeScreen> {
   Future<void> _initializeData() async {
     await _loadDonneurData();
     await _loadAlertes();
+    // 💡 Charger l'historique au démarrage
+    await _loadHistory();
   }
 
   /// Charger les données du donneur (y compris le solde)
@@ -49,6 +55,7 @@ class _DonneurHomeScreenState extends State<DonneurHomeScreen> {
 
       if (response.statusCode == 200) {
         setState(() {
+          // Assurez-vous que le modèle Donneur.fromJson est mis à jour
           _donneurData = Donneur.fromJson(response.data);
         });
       }
@@ -64,8 +71,15 @@ class _DonneurHomeScreenState extends State<DonneurHomeScreen> {
     });
 
     try {
-      // Appel à l'endpoint /api/v1/alertes/actives
-      final response = await _api.get('/api/v1/alertes/actives');
+      if (_donneurData == null) {
+        await _loadDonneurData(); // Assurer que les données sont chargées
+        if (_donneurData == null) return;
+      }
+
+      // Appel à l'endpoint /api/v1/alertes/actives/{groupeSanguin}
+      // 🚀 CORRECTION: Suppression de l'espace de fin dans l'URL pour correspondre au AlerteController
+      final response = await _api
+          .get('/api/v1/alertes/actives/${_donneurData!.groupeSanguin}');
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
@@ -88,9 +102,40 @@ class _DonneurHomeScreenState extends State<DonneurHomeScreen> {
     }
   }
 
+  /// 💡 Nouvelle fonction pour charger l'historique des réponses du donneur
+  Future<void> _loadHistory() async {
+    if (_donneurData == null) return;
+
+    setState(() {
+      _isLoadingHistory = true;
+    });
+
+    try {
+      // Endpoint basé sur ReponseController.java: /api/v1/reponses/donneur/{donneurId}
+      final response =
+          await _api.get('/api/v1/reponses/donneur/${_donneurData!.userId}');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        setState(() {
+          // NOTE: Le modèle ReponseResult est retourné ici.
+          _responseHistory = data;
+        });
+      }
+    } catch (e) {
+      print('Erreur chargement historique: $e');
+    } finally {
+      setState(() {
+        _isLoadingHistory = false;
+      });
+    }
+  }
+
   Future<void> _refreshData() async {
     await _loadDonneurData();
     await _loadAlertes();
+    // 💡 Actualiser l'historique
+    await _loadHistory();
   }
 
   @override
@@ -387,28 +432,112 @@ class _DonneurHomeScreenState extends State<DonneurHomeScreen> {
     );
   }
 
+  /// 💡 Implémentation du Tab Historique
   Widget _buildHistoryTab() {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.history, size: 80, color: AppColors.textSecondary),
-          SizedBox(height: 16),
-          Text(
-            'Historique des dons',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Vos dons apparaîtront ici',
-            style: TextStyle(color: AppColors.textSecondary),
-          ),
-        ],
-      ),
+    return RefreshIndicator(
+      onRefresh: _loadHistory, // Permet d'actualiser l'historique
+      child: _isLoadingHistory
+          ? const Center(
+              child: Padding(
+                padding: EdgeInsets.all(32),
+                child: CircularProgressIndicator(),
+              ),
+            )
+          : _responseHistory.isEmpty
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.history_toggle_off,
+                            size: 80, color: Colors.grey[400]),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Aucune contribution enregistrée',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'L\'historique de vos réponses aux alertes\napparaîtra ici.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _responseHistory.length,
+                  itemBuilder: (context, index) {
+                    // Le type est dynamic (ReponseResult), accédez aux données via Map
+                    final Map<String, dynamic> response =
+                        _responseHistory[index];
+
+                    // Assurez-vous que le backend renvoie le champ 'valide'
+                    final isValide = response['valide'] == true;
+                    final alerteIdSnippet = response['alerteId'] != null
+                        ? response['alerteId'].toString().substring(0, 8)
+                        : 'Inconnue';
+
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: ListTile(
+                        leading: Icon(
+                          isValide
+                              ? Icons.check_circle_outline
+                              : Icons.pending_actions,
+                          color:
+                              isValide ? AppColors.accent : AppColors.primary,
+                        ),
+                        title: Text(
+                          'Réponse à l\'alerte $alerteIdSnippet...',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        // Assurez-vous que 'dateReponse' est renvoyé par le backend
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              isValide
+                                  ? 'Statut: Don Validé'
+                                  : 'Statut: En attente de validation',
+                            ),
+                            if (response['dateReponse'] != null)
+                              Text(
+                                'Date: ${response['dateReponse'].toString().split('T')[0]}', // Affichage simplifié de la date
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.textSecondary),
+                              ),
+                          ],
+                        ),
+                        trailing: Text(
+                          'ID Rép.: ${response['reponseId'].toString().substring(0, 4)}...',
+                          style: const TextStyle(
+                              fontSize: 12, color: AppColors.textSecondary),
+                        ),
+                        onTap: () {
+                          // Optionnel: Naviguer vers les détails de la réponse/alerte
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                  'Détails de la réponse ID: ${response['reponseId']}'),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
     );
   }
 }

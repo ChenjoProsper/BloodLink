@@ -14,4 +14,6 @@ public interface ReponseService {
     public ReponseResult accepterDemande(ReponseRequest reponseRequest);
     public String validerAlerte(UUID reponseId);
     public List<ReponseResult> findAllResponse(UUID alerteId);
+    public List<ReponseResult> findReponseByMedecin(UUID medecinId);
+    public List<ReponseResult> findReponseByDonneur(UUID donneurId);
 }

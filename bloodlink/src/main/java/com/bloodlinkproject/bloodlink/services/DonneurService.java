@@ -15,5 +15,5 @@ public interface DonneurService {
     public UserResult createDonne(DonneurRequest donneurRequest);
     public List<Donneur> afficheAllDonne();
     public String updatePosition(UUID donneurId,double latitude,double longitude);
-    public Donneur findById(UUID donneurId);
+    public UserResult findById(UUID donneurId);
 }

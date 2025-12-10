@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
-import '../../providers/auth_provider.dart';
-import '../../providers/alerte_provider.dart';
+import '../../core/services/storage_service.dart';
+import '../../core/services/alerte_service.dart';
 import '../../models/alerte.dart';
-import '../../widgets/alerte_card.dart';
+import '../../models/reponse.dart';
+import '../../widgets/alerte_card.dart'; // Assurez-vous d'avoir ce widget
 import '../donneur/settings_screen.dart';
 import 'create_alerte_screen.dart';
 
@@ -18,30 +18,42 @@ class MedecinHomeScreen extends StatefulWidget {
 class _MedecinHomeScreenState extends State<MedecinHomeScreen> {
   int _currentIndex = 0;
   List<Alerte> _mesAlertes = [];
+  List<Reponse> _reponsesEnAttente = [];
   bool _isLoading = false;
+
+  final _alerteService = AlerteService();
+  final _storage = StorageService();
+  String? _medecinId;
 
   @override
   void initState() {
     super.initState();
-    _loadAlertes();
+    _initializeData();
   }
 
-  Future<void> _loadAlertes() async {
-    setState(() {
-      _isLoading = true;
-    });
+  Future<void> _initializeData() async {
+    final user = _storage.getUser();
+    if (user?.userId != null) {
+      _medecinId = user!.userId;
+      await _refreshData();
+    }
+  }
 
-    final alerteProvider = Provider.of<AlerteProvider>(context, listen: false);
+  Future<void> _refreshData() async {
+    if (_medecinId == null) return;
+    setState(() => _isLoading = true);
 
-    // Récupérer les alertes depuis le provider
+    // Chargement parallèle des alertes créées et des réponses à valider
+    final results = await Future.wait([
+      _alerteService.getAlertesByMedecinId(_medecinId!),
+      _alerteService.getReponsesByMedecinId(_medecinId!),
+    ]);
+
     setState(() {
-      _mesAlertes = alerteProvider.alertes;
+      _mesAlertes = results[0] as List<Alerte>;
+      _reponsesEnAttente = results[1] as List<Reponse>;
       _isLoading = false;
     });
-  }
-
-  Future<void> _refreshAlertes() async {
-    await _loadAlertes();
   }
 
   @override
@@ -51,25 +63,18 @@ class _MedecinHomeScreenState extends State<MedecinHomeScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.secondary,
         elevation: 0,
-        title: const Text(
-          'BloodLink Médecin',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
+        title: const Text('BloodLink Médecin',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
       ),
       body: _buildBody(),
       floatingActionButton: _currentIndex == 0
           ? FloatingActionButton.extended(
               onPressed: () async {
                 await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const CreateAlerteScreen(),
-                  ),
-                );
-                _refreshAlertes();
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const CreateAlerteScreen()));
+                _refreshData();
               },
               backgroundColor: AppColors.primary,
               icon: const Icon(Icons.add),
@@ -78,359 +83,164 @@ class _MedecinHomeScreenState extends State<MedecinHomeScreen> {
           : null,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
+        onTap: (index) => setState(() => _currentIndex = index),
         selectedItemColor: AppColors.secondary,
-        unselectedItemColor: AppColors.textSecondary,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Accueil',
-          ),
+              icon: Icon(Icons.home_outlined), label: 'Alertes'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.list_outlined),
-            activeIcon: Icon(Icons.list),
-            label: 'Mes alertes',
-          ),
+              icon: Icon(Icons.check_circle_outline), label: 'À valider'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings_outlined),
-            activeIcon: Icon(Icons.settings),
-            label: 'Paramètres',
-          ),
+              icon: Icon(Icons.settings_outlined), label: 'Paramètres'),
         ],
       ),
     );
   }
 
   Widget _buildBody() {
+    if (_isLoading) return const Center(child: CircularProgressIndicator());
     switch (_currentIndex) {
       case 0:
-        return _buildHomeTab();
-      case 1:
         return _buildAlertesTab();
+      case 1:
+        return _buildReponsesTab();
       case 2:
         return const SettingsScreen();
       default:
-        return _buildHomeTab();
+        return _buildAlertesTab();
     }
   }
 
-  Widget _buildHomeTab() {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            decoration: const BoxDecoration(
-              color: AppColors.secondary,
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(30),
-                bottomRight: Radius.circular(30),
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Consumer<AuthProvider>(
-                  builder: (context, authProvider, _) {
-                    return Text(
-                      'Bienvenue, ${authProvider.currentUser?.nom ?? "Docteur"}',
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Gérez vos demandes de sang',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white70,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Statistiques rapides
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _buildStatCard(
+  Widget _buildAlertesTab() {
+    return RefreshIndicator(
+      onRefresh: _refreshData,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          children: [
+            // Header Stats (simplifié)
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                      child: _buildStatCard(
                     icon: Icons.notifications_active,
-                    title: 'Alertes actives',
+                    title: 'Actives',
                     value: _mesAlertes
-                        .where((a) => a.etat == 'EN_COURS')
+                        .where(
+                            (a) => a.etat == 'EN_COURS' || a.etat == 'REPONDU')
                         .length
                         .toString(),
                     color: AppColors.primary,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildStatCard(
+                  )),
+                  const SizedBox(width: 16),
+                  Expanded(
+                      child: _buildStatCard(
                     icon: Icons.check_circle,
-                    title: 'Dons reçus',
+                    title: 'Terminées',
                     value: _mesAlertes
                         .where((a) => a.etat == 'TERMINER')
                         .length
                         .toString(),
                     color: AppColors.accent,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Actions rapides
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              'Actions rapides',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                  )),
+                ],
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              children: [
-                _buildActionCard(
-                  icon: Icons.add_alert,
-                  title: 'Créer une alerte',
-                  subtitle: 'Lancer une demande de don de sang',
-                  color: AppColors.primary,
-                  onTap: () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const CreateAlerteScreen(),
-                      ),
-                    );
-                    _refreshAlertes();
-                  },
-                ),
-                const SizedBox(height: 12),
-                _buildActionCard(
-                  icon: Icons.people,
-                  title: 'Voir mes alertes',
-                  subtitle: 'Gérer les alertes en cours',
-                  color: AppColors.secondary,
-                  onTap: () {
-                    setState(() {
-                      _currentIndex = 1;
-                    });
-                  },
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatCard({
-    required IconData icon,
-    required String title,
-    required String value,
-    required Color color,
-  }) {
-    return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(8),
+            // Liste des alertes
+            if (_mesAlertes.isEmpty)
+              const Padding(
+                  padding: EdgeInsets.all(32),
+                  child: Text("Aucune alerte créée"))
+            else
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _mesAlertes.length,
+                // Utilisez votre widget AlerteCard si disponible, sinon utilisez ListTile
+                itemBuilder: (context, index) =>
+                    AlerteCard(alerte: _mesAlertes[index]),
               ),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
-            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildActionCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: color, size: 30),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(
-                Icons.arrow_forward_ios,
-                color: AppColors.textSecondary,
-                size: 18,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAlertesTab() {
+  Widget _buildReponsesTab() {
     return RefreshIndicator(
-      onRefresh: _refreshAlertes,
-      child: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _mesAlertes.isEmpty
-              ? _buildEmptyAlertes()
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _mesAlertes.length,
-                  itemBuilder: (context, index) {
-                    return AlerteCard(
-                      alerte: _mesAlertes[index],
-                      onTap: () {
-                        // TODO: Navigation vers détails alerte médecin
-                      },
-                    );
-                  },
-                ),
+      onRefresh: _refreshData,
+      child: _reponsesEnAttente.isEmpty
+          ? const Center(child: Text("Aucun don en attente de validation"))
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: _reponsesEnAttente.length,
+              itemBuilder: (context, index) {
+                final reponse = _reponsesEnAttente[index];
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: ListTile(
+                    leading: const CircleAvatar(child: Icon(Icons.person)),
+                    // Utilise les données du donneur bricolé (qui ne feront plus crasher l'app)
+                    title: Text(reponse.donneur.nom,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text(
+                        'Alerte: ${reponse.alerte.description}\nEmail: ${reponse.donneur.email}'),
+                    isThreeLine: true,
+                    trailing: ElevatedButton(
+                      onPressed: () =>
+                          _validerAlerte(context, reponse.reponseId),
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.accent),
+                      child: const Text('Valider',
+                          style: TextStyle(color: Colors.white)),
+                    ),
+                  ),
+                );
+              },
+            ),
     );
   }
 
-  Widget _buildEmptyAlertes() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.list_alt,
-            size: 80,
-            color: Colors.grey[400],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Aucune alerte créée',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey[600],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Créez votre première alerte pour\ntrouver des donneurs',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[500],
-            ),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const CreateAlerteScreen(),
-                ),
-              );
-              _refreshAlertes();
-            },
-            icon: const Icon(Icons.add),
-            label: const Text('Créer une alerte'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 12,
-              ),
-            ),
-          ),
-        ],
+  Future<void> _validerAlerte(BuildContext context, String reponseId) async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    scaffoldMessenger
+        .showSnackBar(const SnackBar(content: Text('Validation en cours...')));
+
+    final result = await _alerteService.validerAlerte(reponseId);
+
+    scaffoldMessenger.hideCurrentSnackBar();
+    if (result['success'] == true) {
+      scaffoldMessenger.showSnackBar(
+          SnackBar(content: Text(result['message'] ?? 'Validé !')));
+      await _refreshData();
+    } else {
+      scaffoldMessenger.showSnackBar(SnackBar(
+          content: Text(result['message'] ?? 'Erreur de validation'),
+          backgroundColor: AppColors.error));
+    }
+  }
+
+  Widget _buildStatCard(
+      {required IconData icon,
+      required String title,
+      required String value,
+      required Color color}) {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 30),
+            const SizedBox(height: 8),
+            Text(value,
+                style: TextStyle(
+                    fontSize: 24, fontWeight: FontWeight.bold, color: color)),
+            Text(title, style: const TextStyle(color: Colors.grey)),
+          ],
+        ),
       ),
     );
   }

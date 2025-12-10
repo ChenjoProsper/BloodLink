@@ -8,7 +8,7 @@ class AppConfig {
       return 'http://localhost:8000';
     } else {
       // Pour Android Emulator
-      return 'http://192.168.208.74:8000';
+      return 'http://192.168.13.74:8000';
       // Pour appareil physique, décommentez et mettez votre IP :
       // return '192.168.211.74:8000';
     }

@@ -17,13 +17,11 @@ class DonneurService {
     try {
       _logger.i('MAJ position donneur: $donneurId');
 
-      final response = await _api.patch(
-        '${AppConfig.donneursEndpoint}/$donneurId/position',
-        data: {
-          'latitude': latitude,
-          'longitude': longitude,
-        },
-      );
+      // 🚀 CORRECTION : On injecte les paramètres directement dans l'URL
+      final url =
+          '${AppConfig.donneursEndpoint}/$donneurId/position?latitude=$latitude&longitude=$longitude';
+
+      final response = await _api.patch(url);
 
       if (response.statusCode == 200) {
         return {
@@ -46,12 +44,10 @@ class DonneurService {
   Future<List<Donneur>> getAllDonneurs() async {
     try {
       final response = await _api.get(AppConfig.donneursEndpoint);
-
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
         return data.map((json) => Donneur.fromJson(json)).toList();
       }
-
       return [];
     } on DioException catch (e) {
       _logger.e('Erreur récupération donneurs: ${e.message}');

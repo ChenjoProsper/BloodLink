@@ -45,7 +45,8 @@ public class DonneurServiceImpl implements DonneurService {
     }
 
     @Override
-    public Donneur findById(UUID donneurId){
-        return donneurRepository.findById(donneurId).orElse(null);
+    public UserResult findById(UUID donneurId){
+
+        return donneurMapper.toDto(donneurRepository.findById(donneurId).orElse(null));
     }
 }

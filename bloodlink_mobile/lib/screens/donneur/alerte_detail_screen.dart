@@ -1,3 +1,5 @@
+// Fichier: alerte_detail_screen.dart (MIS À JOUR)
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -41,15 +43,32 @@ class _AlerteDetailsScreenState extends State<AlerteDetailsScreen> {
       _isLoadingCoords = true;
     });
 
-    // Récupérer les coordonnées du médecin
-    final coords = await _medecinService.getCoordonnesByMedecinId(
-      widget.alerte.medecinId,
-    );
+    // 💡 CORRECTION 1 (Problème 2: Map - Gérer l'ID manquant)
+    final medecinId = widget.alerte.medecinId;
+    if (medecinId == null || medecinId.isEmpty) {
+      print("Erreur: ID du médecin manquant pour récupérer les coordonnées.");
+      setState(() {
+        _medecinCoords = null;
+        _isLoadingCoords = false;
+      });
+      return;
+    }
 
-    setState(() {
-      _medecinCoords = coords;
-      _isLoadingCoords = false;
-    });
+    try {
+      // Récupérer les coordonnées du médecin
+      final coords = await _medecinService.getCoordonnesByMedecinId(medecinId);
+
+      setState(() {
+        _medecinCoords = coords;
+        _isLoadingCoords = false;
+      });
+    } catch (e) {
+      print('Erreur lors du chargement des coordonnées du médecin: $e');
+      setState(() {
+        _medecinCoords = null;
+        _isLoadingCoords = false;
+      });
+    }
   }
 
   Future<void> _accepterAlerte() async {
@@ -130,15 +149,19 @@ class _AlerteDetailsScreenState extends State<AlerteDetailsScreen> {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
+              Navigator.pop(context); // Pop the dialog
+              // Ceci est correct et ferme l'écran pour rafraîchir
+              Navigator.pop(context); // Pop the AlerteDetailsScreen
             },
             child: const Text('Plus tard'),
           ),
           ElevatedButton.icon(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(context); // Pop the dialog
               _openGoogleMaps();
+              // 💡 CORRECTION 2 (Problème 1: Rafraîchissement du donneur) :
+              // Fermer l'écran des détails pour déclencher le .then(...) de DonneurHomeScreen
+              Navigator.pop(context);
             },
             icon: const Icon(Icons.map),
             label: const Text('Ouvrir Maps'),
@@ -167,7 +190,7 @@ class _AlerteDetailsScreenState extends State<AlerteDetailsScreen> {
 
     // URL pour Google Maps
     final url = Uri.parse(
-        'https://www.google.com/maps/dir/?api=1&destination=$lat,$lon&travelmode=driving');
+        'https://www.google.com/maps/dir/?api=1&destination=$lat,$lon'); // URL corrigée
 
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
@@ -183,6 +206,7 @@ class _AlerteDetailsScreenState extends State<AlerteDetailsScreen> {
     }
   }
 
+  // ... (Reste du code build inchangé)
   @override
   Widget build(BuildContext context) {
     final locationProvider = Provider.of<LocationProvider>(context);

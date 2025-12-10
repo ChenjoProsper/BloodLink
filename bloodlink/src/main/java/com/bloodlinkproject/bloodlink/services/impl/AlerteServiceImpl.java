@@ -1,7 +1,7 @@
 package com.bloodlinkproject.bloodlink.services.impl;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
@@ -11,6 +11,7 @@ import com.bloodlinkproject.bloodlink.dto.UserResult;
 import com.bloodlinkproject.bloodlink.mapper.AlerteMapper;
 import com.bloodlinkproject.bloodlink.mapper.DonneurMapper;
 import com.bloodlinkproject.bloodlink.models.Alerte;
+import com.bloodlinkproject.bloodlink.models.GroupeSanguin;
 import com.bloodlinkproject.bloodlink.repository.AlerteRepository;
 import com.bloodlinkproject.bloodlink.repository.DonneurRepository;
 import com.bloodlinkproject.bloodlink.services.AlerteService;
@@ -44,16 +45,14 @@ public class AlerteServiceImpl implements AlerteService {
 
     // NOUVELLES IMPLÉMENTATIONS
     @Override
-    public List<AlerteResult> getAlertesActives() {
-        return alerteRepository.findAll().stream()
-                .filter(alerte -> "EN_COURS".equals(alerte.getEtat()))
-                .collect(Collectors.toList()).stream().map(alerteMapper::toDto).toList();
-    }
+    public List<AlerteResult> getAlertesActives(GroupeSanguin gsang) {
+        return alerteRepository.findByEtatAndGsang("EN_COURS", gsang)
+                        .stream().map(alerteMapper::toDto).toList();
+            }
 
     @Override
-    public List<AlerteResult> getAlertesByMedecin(String medecinId) {
-        return alerteRepository.findAll().stream()
-                .filter(alerte -> medecinId.equals(alerte.getMedecin().getUserId()))
-                .collect(Collectors.toList()).stream().map(alerteMapper::toDto).toList();
+    public List<AlerteResult> getAlertesByMedecin(UUID medecinId) {
+        return alerteRepository.findByMedecinUserId(medecinId)
+                .stream().map(alerteMapper::toDto).toList();
     }
 }

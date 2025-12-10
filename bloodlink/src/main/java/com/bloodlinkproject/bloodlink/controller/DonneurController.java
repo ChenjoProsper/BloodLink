@@ -10,6 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.bloodlinkproject.bloodlink.dto.DonneurRequest;
+import com.bloodlinkproject.bloodlink.dto.PositionRequest;
 import com.bloodlinkproject.bloodlink.dto.UserResult;
 import com.bloodlinkproject.bloodlink.models.Donneur;
 import com.bloodlinkproject.bloodlink.services.DonneurService;
@@ -51,7 +52,7 @@ public class DonneurController {
     @GetMapping
     @PreAuthorize("hasAnyAuthority('MEDECIN', 'ADMIN')")
     @Operation(summary = "Lister tous les donneurs", 
-               description = "Récupère la liste complète des donneurs")
+                description = "Récupère la liste complète des donneurs")
     public ResponseEntity<List<Donneur>> getAllDonneurs() {
         List<Donneur> donneurs = donneurService.afficheAllDonne();
         return ResponseEntity.ok(donneurs);
@@ -63,15 +64,18 @@ public class DonneurController {
      */
     @PatchMapping("/{donneurId}/position")
     @PreAuthorize("hasAuthority('DONNEUR')")
-    @Operation(summary = "Mettre à jour la position", 
-                description = "Permet à un donneur de mettre à jour sa position GPS")
+    @Operation(summary = "Mettre à jour la position",description = "Permet à un donneur de mettre à jour sa position GPS")
     public ResponseEntity<String> updatePosition(
-            @PathVariable UUID donneurId,
-            @RequestParam double latitude,
-            @RequestParam double longitude) {
-        String message = donneurService.updatePosition(donneurId, latitude, longitude);
-        return ResponseEntity.ok(message);
-    }
+        @PathVariable UUID donneurId,
+        @RequestBody PositionRequest positionRequest) {
+
+    String message = donneurService.updatePosition(
+        donneurId, 
+        positionRequest.getLatitude(),
+        positionRequest.getLongitude()
+    );
+    return ResponseEntity.ok(message);
+}
 
     /**
      * Obtenir un donneur par ID
@@ -81,7 +85,7 @@ public class DonneurController {
     @PreAuthorize("hasAnyAuthority('DONNEUR', 'MEDECIN', 'ADMIN')")
     @Operation(summary = "Obtenir un donneur par ID", 
                 description = "Récupère les informations d'un donneur spécifique")
-    public ResponseEntity<Donneur> getDonneurById(@PathVariable UUID donneurId) {
+    public ResponseEntity<UserResult> getDonneurById(@PathVariable UUID donneurId) {
         return ResponseEntity.ok(donneurService.findById(donneurId));
     }
         /**

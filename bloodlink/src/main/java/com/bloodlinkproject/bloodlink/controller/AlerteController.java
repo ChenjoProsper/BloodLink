@@ -1,6 +1,7 @@
 package com.bloodlinkproject.bloodlink.controller;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,7 @@ import com.bloodlinkproject.bloodlink.dto.AlerteRequest;
 import com.bloodlinkproject.bloodlink.dto.AlerteResult;
 import com.bloodlinkproject.bloodlink.dto.UserResult;
 import com.bloodlinkproject.bloodlink.models.Alerte;
+import com.bloodlinkproject.bloodlink.models.GroupeSanguin;
 import com.bloodlinkproject.bloodlink.services.AlerteService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -44,11 +46,11 @@ public class AlerteController {
      * NOUVEAU : Récupérer toutes les alertes actives
      * GET /api/v1/alertes/actives
      */
-    @GetMapping("/actives")
+    @GetMapping("/actives/{gsang}")
     @PreAuthorize("hasAnyAuthority('DONNEUR', 'MEDECIN', 'ADMIN')")
     @Operation(summary = "Récupérer toutes les alertes actives")
-    public ResponseEntity<List<AlerteResult>> getAlertesActives() {
-        List<AlerteResult> alertes = alerteService.getAlertesActives();
+    public ResponseEntity<List<AlerteResult>> getAlertesActives(@PathVariable GroupeSanguin gsang ) {
+        List<AlerteResult> alertes = alerteService.getAlertesActives(gsang);
         return ResponseEntity.ok(alertes);
     }
 
@@ -59,7 +61,7 @@ public class AlerteController {
     @GetMapping("/medecin/{medecinId}")
     @PreAuthorize("hasAuthority('MEDECIN')")
     @Operation(summary = "Récupérer les alertes d'un médecin")
-    public ResponseEntity<List<AlerteResult>> getAlertesByMedecin(@PathVariable String medecinId) {
+    public ResponseEntity<List<AlerteResult>> getAlertesByMedecin(@PathVariable UUID medecinId) {
         List<AlerteResult> alertes = alerteService.getAlertesByMedecin(medecinId);
         return ResponseEntity.ok(alertes);
     }

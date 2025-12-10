@@ -66,5 +66,22 @@ public class ReponseController {
         List<ReponseResult> reponseResults = reponseService.findAllResponse(alerteId);
         return ResponseEntity.ok(reponseResults);
     }
-    
+
+
+    @GetMapping("/medecin/{medecinId}")
+    @PreAuthorize("hasAnyAuthority('MEDECIN', 'ADMIN')")
+    @Operation(summary = "Lister toutes les reponses d'un medecin")
+    public ResponseEntity<List<ReponseResult>> getAllReponseByMedecin(@PathVariable UUID medecinId) {
+        List<ReponseResult> reponseResults = reponseService.findReponseByMedecin(medecinId);
+        return ResponseEntity.ok(reponseResults);
+    }
+
+    @GetMapping("/donneur/{donneurId}")
+    @PreAuthorize("hasAnyAuthority('DONNEUR', 'ADMIN')")
+    @Operation(summary = "Lister toutes les reponses d'un donneur")
+    public ResponseEntity<List<ReponseResult>> getAllReponseByDonneur(@PathVariable UUID donneurId) {
+        List<ReponseResult> reponseResults = reponseService.findReponseByDonneur(donneurId);
+        return ResponseEntity.ok(reponseResults);
+    }
+
 }

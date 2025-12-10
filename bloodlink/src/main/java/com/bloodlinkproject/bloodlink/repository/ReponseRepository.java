@@ -11,5 +11,8 @@ import com.bloodlinkproject.bloodlink.models.Reponse;
 @Repository
 public interface ReponseRepository extends JpaRepository<Reponse,UUID> {
     List<Reponse> findByAlerteAlerteId(UUID alerte);
-    
+    List<Reponse> findByAlerteMedecinUserId(UUID userId);
+    List<Reponse> findByDonneurUserId(UUID userId);
+    List<Reponse> findByAlerteMedecinUserIdAndAlerteEtat(UUID userId, String etat);
+
 }

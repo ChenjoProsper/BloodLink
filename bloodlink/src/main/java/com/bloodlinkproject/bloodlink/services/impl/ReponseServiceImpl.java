@@ -34,6 +34,8 @@ public class ReponseServiceImpl implements ReponseService {
             throw new RuntimeException("La demande n'est plus en cours");
         }
         Reponse reponse = reponseMapper.toEntity(reponseRequest);
+        reponse.getAlerte().setEtat("ACCEPTER");
+        alerteRepository.save(reponse.getAlerte());
         reponseRepository.save(reponse);
 
         return reponseMapper.toDto(reponse);
@@ -57,5 +59,18 @@ public class ReponseServiceImpl implements ReponseService {
     @Override
     public List<ReponseResult> findAllResponse(UUID alerteId){
         return reponseRepository.findByAlerteAlerteId(alerteId).stream().map(reponseMapper::toDto).toList();
+    }
+
+    @Override
+    public List<ReponseResult> findReponseByMedecin(UUID medecinId){
+        // 💡 MODIFICATION: Filtrer uniquement les alertes EN_COURS
+        return reponseRepository
+            .findByAlerteMedecinUserIdAndAlerteEtat(medecinId, "EN_COURS")
+            .stream().map(reponseMapper::toDto).toList();
+    }
+
+    @Override
+    public List<ReponseResult> findReponseByDonneur(UUID donneurId){
+        return reponseRepository.findByDonneurUserId(donneurId).stream().map(reponseMapper::toDto).toList();
     }
 }

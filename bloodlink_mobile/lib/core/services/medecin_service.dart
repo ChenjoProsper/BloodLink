@@ -11,6 +11,10 @@ class MedecinService {
   /// Récupérer les coordonnées d'un médecin par son ID
   Future<Map<String, double>?> getCoordonnesByMedecinId(
       String medecinId) async {
+    if (medecinId == null || medecinId.isEmpty) {
+      throw Exception(
+          "L'ID du médecin est manquant pour récupérer les coordonnées.");
+    }
     try {
       final response = await _api.get(
         '${AppConfig.medecinsEndpoint}/$medecinId/coordonnees',

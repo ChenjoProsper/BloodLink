@@ -70,11 +70,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
 
     // Mettre à jour la position dans le backend
-    final result = await _donneurService.updatePosition(
-      user!.userId,
-      locationProvider.currentPosition!.latitude,
-      locationProvider.currentPosition!.longitude,
-    );
+    final result =
+        await _donneurService.updateDonneurCurrentPosition(user!.userId);
 
     setState(() {
       _isUpdatingPosition = false;

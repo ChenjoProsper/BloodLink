@@ -40,6 +40,14 @@ class MedecinService {
   /// Récupérer les coordonnées d'une adresse
   Future<Map<String, double>?> getCoordonnesByAdresse(String adresse) async {
     try {
+      if (adresse.isEmpty || adresse == 'Adresse non spécifiée') {
+        _logger.w('Adresse vide ou non spécifiée.');
+        return null;
+      }
+
+      _logger.i('Récupération coordonnées pour adresse: $adresse');
+
+      // 💡 Utilisation de queryParameters pour l'adresse
       final response = await _api.get(
         '${AppConfig.medecinsEndpoint}/coordonnees',
         queryParameters: {'adresse': adresse},
@@ -47,14 +55,19 @@ class MedecinService {
 
       if (response.statusCode == 200) {
         final data = response.data as Map<String, dynamic>;
-        return {
-          'latitude': data['latitude'],
-          'longitude': data['longitude'],
-        };
+
+        // Le backend retourne {adresse, latitude, longitude}
+        if (data.containsKey('latitude') && data.containsKey('longitude')) {
+          return {
+            'latitude': (data['latitude'] as num).toDouble(),
+            'longitude': (data['longitude'] as num).toDouble(),
+          };
+        }
       }
 
       return null;
     } on DioException catch (e) {
+      // Le backend renvoie probablement 500 ou 404 si l'adresse n'est pas trouvée
       _logger.e('Erreur coordonnées adresse: ${e.message}');
       return null;
     }

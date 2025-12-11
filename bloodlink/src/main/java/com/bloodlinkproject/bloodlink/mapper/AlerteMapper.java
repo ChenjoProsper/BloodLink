@@ -1,5 +1,6 @@
 package com.bloodlinkproject.bloodlink.mapper;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.bloodlinkproject.bloodlink.dto.AlerteRequest;
@@ -7,12 +8,16 @@ import com.bloodlinkproject.bloodlink.dto.AlerteResult;
 import com.bloodlinkproject.bloodlink.models.Alerte;
 import com.bloodlinkproject.bloodlink.models.Medecin;
 import com.bloodlinkproject.bloodlink.repository.MedecinRepository;
+import com.bloodlinkproject.bloodlink.services.Utils;
 
 import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
 public class AlerteMapper {
+
+    @Value("${api.key}")
+    private String api_key;
     
     private final MedecinRepository medecinRepository;
 
@@ -34,6 +39,13 @@ public class AlerteMapper {
         alerteResult.setDescription(alerte.getDescription());
         alerteResult.setRemuneration(alerte.getRemuneration());
         alerteResult.setAlerteId(alerte.getAlerteId());
+        alerteResult.setEtat(alerte.getEtat());
+        alerteResult.setMedecinId(alerte.getMedecin().getUserId());
+        alerteResult.setGsang(alerte.getGsang());
+        double []coordonnes = Utils.getCoordonnes(alerteResult.getAdresse(), api_key);
+        alerteResult.setLatitude(coordonnes[0]);
+        alerteResult.setLongitude(coordonnes[1]);
+
         return alerteResult;
     }
 

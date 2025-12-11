@@ -1,6 +1,8 @@
 package com.bloodlinkproject.bloodlink.models;
 
 import java.util.UUID;
+import java.util.Set; // Import nécessaire
+import java.util.HashSet; // Import nécessaire
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -14,6 +16,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany; // Import nécessaire
+import jakarta.persistence.CascadeType; // Import nécessaire
 import lombok.Data;
 
 @Entity
@@ -39,4 +43,8 @@ public class Alerte {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private Medecin medecin;
+
+    // 💡 AJOUT : Relation One-to-Many vers Reponse
+    @OneToMany(mappedBy = "alerte", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Reponse> reponses = new HashSet<>();
 }

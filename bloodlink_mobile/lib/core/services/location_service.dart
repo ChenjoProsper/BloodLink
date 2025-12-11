@@ -12,12 +12,12 @@ class LocationService {
 
   /// Vérifie et demande les permissions de localisation
   Future<bool> requestLocationPermission() async {
-    // ✅ Sur Web, les permissions sont gérées par le navigateur
+    // Sur Web, les permissions sont gérées par le navigateur
     if (kIsWeb) {
       _logger.i('Web: Permissions de localisation gérées par le navigateur');
       return true;
     }
-    
+
     PermissionStatus permission = await Permission.location.status;
 
     if (permission.isDenied) {
@@ -25,6 +25,7 @@ class LocationService {
     }
 
     if (permission.isPermanentlyDenied) {
+      // Ouvre les paramètres de l'application si l'utilisateur a refusé définitivement
       await openAppSettings();
       return false;
     }
@@ -35,7 +36,7 @@ class LocationService {
   /// Obtient la position actuelle de l'utilisateur
   Future<Position?> getCurrentPosition() async {
     try {
-      // ✅ Sur Web, vérifier d'abord si la géolocalisation est disponible
+      // Vérification des permissions et du service GPS
       if (kIsWeb) {
         bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
         if (!serviceEnabled) {
@@ -52,6 +53,7 @@ class LocationService {
         bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
         if (!serviceEnabled) {
           _logger.w('Service de localisation désactivé');
+          // Optionnel: Vous pourriez appeler Geolocator.openLocationSettings(); ici
           return null;
         }
       }
@@ -60,7 +62,8 @@ class LocationService {
         desiredAccuracy: LocationAccuracy.high,
       );
 
-      _logger.i('Position obtenue: ${position.latitude}, ${position.longitude}');
+      _logger
+          .i('Position obtenue: ${position.latitude}, ${position.longitude}');
       return position;
     } catch (e) {
       _logger.e('Erreur lors de la récupération de la position: $e');

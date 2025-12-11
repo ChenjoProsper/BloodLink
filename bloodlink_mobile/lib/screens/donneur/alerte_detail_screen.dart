@@ -1,4 +1,4 @@
-// Fichier: alerte_detail_screen.dart (MIS À JOUR)
+// Fichier: screens/alerte_detail_screen.dart
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -39,36 +39,29 @@ class _AlerteDetailsScreenState extends State<AlerteDetailsScreen> {
   }
 
   Future<void> _loadMedecinCoordinates() async {
+    if (widget.alerte.adresse.isEmpty ||
+        widget.alerte.adresse == 'Adresse non spécifiée') {
+      setState(() {
+        _medecinCoords = null;
+        _isLoadingCoords = false;
+      });
+      print('Adresse de l\'alerte manquante. Impossible de charger la carte.');
+      return;
+    }
+
     setState(() {
       _isLoadingCoords = true;
     });
 
-    // 💡 CORRECTION 1 (Problème 2: Map - Gérer l'ID manquant)
-    final medecinId = widget.alerte.medecinId;
-    if (medecinId == null || medecinId.isEmpty) {
-      print("Erreur: ID du médecin manquant pour récupérer les coordonnées.");
-      setState(() {
-        _medecinCoords = null;
-        _isLoadingCoords = false;
-      });
-      return;
-    }
+    // 💡 Appel au service en utilisant l'adresse de l'alerte
+    final coords = await _medecinService.getCoordonnesByAdresse(
+      widget.alerte.adresse,
+    );
 
-    try {
-      // Récupérer les coordonnées du médecin
-      final coords = await _medecinService.getCoordonnesByMedecinId(medecinId);
-
-      setState(() {
-        _medecinCoords = coords;
-        _isLoadingCoords = false;
-      });
-    } catch (e) {
-      print('Erreur lors du chargement des coordonnées du médecin: $e');
-      setState(() {
-        _medecinCoords = null;
-        _isLoadingCoords = false;
-      });
-    }
+    setState(() {
+      _medecinCoords = coords;
+      _isLoadingCoords = false;
+    });
   }
 
   Future<void> _accepterAlerte() async {
@@ -118,8 +111,6 @@ class _AlerteDetailsScreenState extends State<AlerteDetailsScreen> {
           backgroundColor: AppColors.accent,
         ),
       );
-
-      // Afficher dialog pour ouvrir Maps
       _showNavigationDialog();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -149,19 +140,15 @@ class _AlerteDetailsScreenState extends State<AlerteDetailsScreen> {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context); // Pop the dialog
-              // Ceci est correct et ferme l'écran pour rafraîchir
-              Navigator.pop(context); // Pop the AlerteDetailsScreen
+              Navigator.pop(context);
+              Navigator.pop(context);
             },
             child: const Text('Plus tard'),
           ),
           ElevatedButton.icon(
             onPressed: () {
-              Navigator.pop(context); // Pop the dialog
-              _openGoogleMaps();
-              // 💡 CORRECTION 2 (Problème 1: Rafraîchissement du donneur) :
-              // Fermer l'écran des détails pour déclencher le .then(...) de DonneurHomeScreen
               Navigator.pop(context);
+              _openGoogleMaps();
             },
             icon: const Icon(Icons.map),
             label: const Text('Ouvrir Maps'),
@@ -188,15 +175,18 @@ class _AlerteDetailsScreenState extends State<AlerteDetailsScreen> {
     final lat = _medecinCoords!['latitude'];
     final lon = _medecinCoords!['longitude'];
 
-    // URL pour Google Maps
-    final url = Uri.parse(
-        'https://www.google.com/maps/dir/?api=1&destination=$lat,$lon'); // URL corrigée
+    // 💡 CORRECTION: URL pour lancer la navigation dans Google Maps
+    final url = Uri.parse('google.navigation:q=$lat,$lon');
+
+    // URL Web de secours
+    final webUrl = Uri.parse('http://maps.google.com/?daddr=$lat,$lon');
 
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else if (await canLaunchUrl(webUrl)) {
+      await launchUrl(webUrl, mode: LaunchMode.externalApplication);
     } else {
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Impossible d\'ouvrir Google Maps'),
@@ -204,20 +194,22 @@ class _AlerteDetailsScreenState extends State<AlerteDetailsScreen> {
         ),
       );
     }
+
+    if (mounted) Navigator.pop(context);
   }
 
-  // ... (Reste du code build inchangé)
   @override
   Widget build(BuildContext context) {
     final locationProvider = Provider.of<LocationProvider>(context);
     double? distance;
 
-    if (widget.alerte.latitude != null &&
-        widget.alerte.longitude != null &&
-        locationProvider.currentPosition != null) {
+    if (_medecinCoords != null && locationProvider.currentPosition != null) {
+      // Assurez-vous que cette méthode est disponible dans votre LocationProvider
+      // ou remplacez-la par un calcul standard si elle est absente.
+      // Par exemple : Geolocator.distanceBetween(lat1, lon1, lat2, lon2) / 1000
       distance = locationProvider.calculateDistanceToAlerte(
-        widget.alerte.latitude!,
-        widget.alerte.longitude!,
+        _medecinCoords!['latitude']!,
+        _medecinCoords!['longitude']!,
       );
     }
 
@@ -276,11 +268,42 @@ class _AlerteDetailsScreenState extends State<AlerteDetailsScreen> {
                       icon: BitmapDescriptor.defaultMarkerWithHue(
                         BitmapDescriptor.hueRed,
                       ),
-                      infoWindow: const InfoWindow(title: 'Hôpital'),
+                      infoWindow: InfoWindow(title: widget.alerte.adresse),
                     ),
                   },
                   onMapCreated: (controller) {
                     _mapController = controller;
+                    // Optionnel: Animer la caméra pour inclure les deux points
+                    if (_mapController != null &&
+                        locationProvider.currentPosition != null) {
+                      _mapController!.animateCamera(
+                        CameraUpdate.newLatLngBounds(
+                          LatLngBounds(
+                            southwest: LatLng(
+                              locationProvider.currentPosition!.latitude <
+                                      _medecinCoords!['latitude']!
+                                  ? locationProvider.currentPosition!.latitude
+                                  : _medecinCoords!['latitude']!,
+                              locationProvider.currentPosition!.longitude <
+                                      _medecinCoords!['longitude']!
+                                  ? locationProvider.currentPosition!.longitude
+                                  : _medecinCoords!['longitude']!,
+                            ),
+                            northeast: LatLng(
+                              locationProvider.currentPosition!.latitude >
+                                      _medecinCoords!['latitude']!
+                                  ? locationProvider.currentPosition!.latitude
+                                  : _medecinCoords!['latitude']!,
+                              locationProvider.currentPosition!.longitude >
+                                      _medecinCoords!['longitude']!
+                                  ? locationProvider.currentPosition!.longitude
+                                  : _medecinCoords!['longitude']!,
+                            ),
+                          ),
+                          50.0, // padding
+                        ),
+                      );
+                    }
                   },
                   myLocationEnabled: true,
                   myLocationButtonEnabled: true,
@@ -290,12 +313,13 @@ class _AlerteDetailsScreenState extends State<AlerteDetailsScreen> {
               Container(
                 height: 250,
                 color: Colors.grey[200],
-                child: const Center(
-                  child: Text('Carte non disponible'),
+                child: Center(
+                  child: Text(
+                      'Carte non disponible. Hôpital : ${widget.alerte.adresse}'),
                 ),
               ),
 
-            // Contenu
+            // ... (Reste du contenu inchangé)
             Padding(
               padding: const EdgeInsets.all(24),
               child: Column(

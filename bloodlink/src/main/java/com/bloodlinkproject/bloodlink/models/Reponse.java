@@ -1,5 +1,6 @@
 package com.bloodlinkproject.bloodlink.models;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import jakarta.persistence.Entity;
@@ -25,4 +26,6 @@ public class Reponse {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "alerte_id")
     private Alerte alerte;
+
+    private LocalDateTime date = LocalDateTime.now();
 }

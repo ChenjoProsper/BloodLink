@@ -17,6 +17,8 @@ import lombok.RequiredArgsConstructor;
 public class ReponseMapper {
     
     private final DonneurRepository donneurRepository;
+    private final AlerteMapper alerteMapper;
+    private final DonneurMapper donneurMapper;
     private final AlerteRepository alerteRepository;
 
 
@@ -30,11 +32,10 @@ public class ReponseMapper {
     }
     public ReponseResult toDto(Reponse reponse){
         ReponseResult reponseResult = new ReponseResult();
-        reponseResult.setEmail(reponse.getDonneur().getEmail());
-        reponseResult.setNom(reponse.getDonneur().getNom());
-        reponseResult.setNumero(reponse.getDonneur().getNumero());
-        reponseResult.setSexe(reponse.getDonneur().getSexe());
+        reponseResult.setAlerte(alerteMapper.toDto(reponse.getAlerte()));
+        reponseResult.setDonneur(donneurMapper.toDto(reponse.getDonneur()));
         reponseResult.setReponseId(reponse.getReponseId());
+        reponseResult.setDateReponse(reponse.getDate());
 
         return reponseResult;
     }

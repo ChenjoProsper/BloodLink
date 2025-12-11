@@ -1,3 +1,5 @@
+// Fichier: screens/medecin/create_alerte_screen.dart (VERSION FINALE)
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
@@ -26,6 +28,7 @@ class _CreateAlerteScreenState extends State<CreateAlerteScreen> {
 
   String? _selectedgsang;
   Map<String, double>? _medecinCoords;
+  // Stocke les résultats de la recommandation (List<UserResult> en réalité)
   List<dynamic> _donneurRecommandes = [];
   bool _isLoadingCoords = false;
   bool _showRecommandations = false;
@@ -62,6 +65,7 @@ class _CreateAlerteScreenState extends State<CreateAlerteScreen> {
 
     final user = _storage.getUser();
     if (user?.userId != null) {
+      // Appel au MedecinService pour récupérer les coordonnées GPS
       final coords =
           await _medecinService.getCoordonnesByMedecinId(user!.userId);
 
@@ -70,13 +74,13 @@ class _CreateAlerteScreenState extends State<CreateAlerteScreen> {
           _medecinCoords = coords;
         });
       } else {
-        // Essayer de récupérer par adresse si l'ID ne fonctionne pas
+        // Coordonnées non disponibles (le médecin doit avoir une adresse GPS associée)
         if (!mounted) return;
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-                'Coordonnées GPS non disponibles. Veuillez vérifier votre adresse.'),
+                'Coordonnées GPS non disponibles pour votre hôpital. Veuillez contacter l\'administrateur.'),
             backgroundColor: AppColors.error,
           ),
         );
@@ -88,7 +92,7 @@ class _CreateAlerteScreenState extends State<CreateAlerteScreen> {
     });
   }
 
-  /// Afficher les donneurs recommandés
+  /// Afficher les donneurs recommandés (dans un rayon de 5km)
   Future<void> _showDonneurRecommandes() async {
     if (_medecinCoords == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -100,19 +104,36 @@ class _CreateAlerteScreenState extends State<CreateAlerteScreen> {
       return;
     }
 
+    // Si on change de groupe sanguin après avoir cliqué, on rafraîchit l'affichage
+    if (_selectedgsang == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Veuillez sélectionner un groupe sanguin d\'abord.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _showRecommandations = true;
+      _donneurRecommandes = []; // Clear la liste avant de charger
     });
 
     final alerteProvider = Provider.of<AlerteProvider>(context, listen: false);
 
+    // L'API de recommandation ne prend que lat/long, le filtre GS est côté client (ici on ne filtre pas)
+    // Côté backend (AlerteServiceImpl.java), la recommandation ne filtre que par distance (<= 5km)
     final donneurs = await alerteProvider.getRecommendations(
       _medecinCoords!['latitude']!,
       _medecinCoords!['longitude']!,
+      // Note: Le groupe sanguin est ignoré par l'API de recommandation actuelle
     );
 
     setState(() {
-      _donneurRecommandes = donneurs;
+      // Filtrer côté client par groupe sanguin pour une meilleure pertinence
+      _donneurRecommandes =
+          donneurs.where((d) => d['groupeSanguin'] == _selectedgsang).toList();
     });
   }
 
@@ -153,9 +174,13 @@ class _CreateAlerteScreenState extends State<CreateAlerteScreen> {
 
     final alerteProvider = Provider.of<AlerteProvider>(context, listen: false);
 
+    // Création de l'objet Alerte avec les coordonnées du médecin
     final alerte = Alerte(
       description: _descriptionController.text.trim(),
       gsang: _selectedgsang!,
+      // La classe Alerte n'a pas besoin de l'adresse si les coordonnées sont fournies
+      // Je mets une adresse par défaut ou vide, car le modèle Alerte la requiert (required this.adresse)
+      adresse: "Adresse du Medecin",
       remuneration: double.tryParse(_remunerationController.text) ?? 0,
       medecinId: user!.userId,
       latitude: _medecinCoords!['latitude'],
@@ -188,6 +213,7 @@ class _CreateAlerteScreenState extends State<CreateAlerteScreen> {
       await Future.delayed(const Duration(milliseconds: 500));
       if (!mounted) return;
 
+      // Ferme l'écran et envoie 'true' pour indiquer un succès
       Navigator.pop(context, true);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -215,7 +241,10 @@ class _CreateAlerteScreenState extends State<CreateAlerteScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.secondary,
         elevation: 0,
-        title: const Text('Nouvelle alerte'),
+        title: const Text(
+          'Nouvelle alerte',
+          style: TextStyle(color: Colors.white),
+        ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: _isLoadingCoords
@@ -225,7 +254,7 @@ class _CreateAlerteScreenState extends State<CreateAlerteScreen> {
                 children: [
                   CircularProgressIndicator(),
                   SizedBox(height: 16),
-                  Text('Chargement des coordonnées...'),
+                  Text('Chargement des coordonnées du centre...'),
                 ],
               ),
             )
@@ -279,7 +308,7 @@ class _CreateAlerteScreenState extends State<CreateAlerteScreen> {
                                   ),
                                   if (_medecinCoords != null)
                                     Text(
-                                      'Rayon de recherche: 5 km',
+                                      'Lat: ${_medecinCoords!['latitude']?.toStringAsFixed(4)}, Long: ${_medecinCoords!['longitude']?.toStringAsFixed(4)}',
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: Colors.grey[600],
@@ -364,6 +393,7 @@ class _CreateAlerteScreenState extends State<CreateAlerteScreen> {
                                         width: 12,
                                         height: 12,
                                         decoration: BoxDecoration(
+                                          // Assurez-vous que AppColors.bloodGroupColors est défini
                                           color: AppColors
                                                   .bloodGroupColors[groupe] ??
                                               AppColors.primary,
@@ -379,7 +409,16 @@ class _CreateAlerteScreenState extends State<CreateAlerteScreen> {
                               onChanged: (value) {
                                 setState(() {
                                   _selectedgsang = value;
+                                  // Réinitialiser les recommandations si le groupe sanguin change
+                                  _showRecommandations = false;
+                                  _donneurRecommandes = [];
                                 });
+                              },
+                              validator: (value) {
+                                if (value == null) {
+                                  return 'Veuillez sélectionner un groupe sanguin';
+                                }
+                                return null;
                               },
                             ),
                           ),
@@ -408,11 +447,12 @@ class _CreateAlerteScreenState extends State<CreateAlerteScreen> {
                       const SizedBox(height: 24),
 
                       // Bouton voir les recommandations
-                      if (_medecinCoords != null)
+                      if (_medecinCoords != null && _selectedgsang != null)
                         OutlinedButton.icon(
                           onPressed: _showDonneurRecommandes,
                           icon: const Icon(Icons.search),
-                          label: const Text('Voir les donneurs disponibles'),
+                          label: Text(
+                              'Voir les donneurs ${_selectedgsang!.replaceAll('_', ' ')} disponibles'),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             side: const BorderSide(
@@ -429,7 +469,9 @@ class _CreateAlerteScreenState extends State<CreateAlerteScreen> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: _donneurRecommandes.isNotEmpty
+                                ? AppColors.primary.withOpacity(0.1)
+                                : Colors.grey[200],
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: Colors.grey[300]!),
                           ),
@@ -438,13 +480,17 @@ class _CreateAlerteScreenState extends State<CreateAlerteScreen> {
                             children: [
                               Row(
                                 children: [
-                                  const Icon(
-                                    Icons.people,
-                                    color: AppColors.secondary,
+                                  Icon(
+                                    _donneurRecommandes.isNotEmpty
+                                        ? Icons.people
+                                        : Icons.sentiment_dissatisfied,
+                                    color: _donneurRecommandes.isNotEmpty
+                                        ? AppColors.secondary
+                                        : AppColors.textSecondary,
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    '${_donneurRecommandes.length} donneurs trouvés',
+                                    '${_donneurRecommandes.length} donneurs correspondants trouvés',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 16,
@@ -455,13 +501,24 @@ class _CreateAlerteScreenState extends State<CreateAlerteScreen> {
                               if (_donneurRecommandes.isNotEmpty) ...[
                                 const SizedBox(height: 12),
                                 Text(
-                                  'Dans un rayon de 5 km',
+                                  'Ces donneurs ${_selectedgsang!.replaceAll('_', ' ')} sont dans un rayon de 5 km et recevront l\'alerte.',
                                   style: TextStyle(
                                     fontSize: 13,
                                     color: Colors.grey[600],
                                   ),
                                 ),
                               ],
+                              if (_donneurRecommandes.isEmpty)
+                                const Padding(
+                                  padding: EdgeInsets.only(top: 8.0),
+                                  child: Text(
+                                    'Aucun donneur de ce groupe sanguin trouvé à proximité (5 km). L\'alerte sera envoyée dès qu\'un donneur se connectera dans la zone.',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ),
                             ],
                           ),
                         ),

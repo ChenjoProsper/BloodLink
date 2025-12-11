@@ -64,18 +64,18 @@ public class DonneurController {
      */
     @PatchMapping("/{donneurId}/position")
     @PreAuthorize("hasAuthority('DONNEUR')")
-    @Operation(summary = "Mettre à jour la position",description = "Permet à un donneur de mettre à jour sa position GPS")
+    @Operation(summary = "Mettre à jour la position GPS")
     public ResponseEntity<String> updatePosition(
-        @PathVariable UUID donneurId,
-        @RequestBody PositionRequest positionRequest) {
-
-    String message = donneurService.updatePosition(
-        donneurId, 
-        positionRequest.getLatitude(),
-        positionRequest.getLongitude()
-    );
-    return ResponseEntity.ok(message);
-}
+            @PathVariable UUID donneurId,
+            @Valid @RequestBody PositionRequest positionRequest) {
+        
+        String message = donneurService.updatePosition(
+            donneurId, 
+            positionRequest.getLatitude(),
+            positionRequest.getLongitude()
+        ); // <- Appel au Service
+        return ResponseEntity.ok(message);
+    }
 
     /**
      * Obtenir un donneur par ID

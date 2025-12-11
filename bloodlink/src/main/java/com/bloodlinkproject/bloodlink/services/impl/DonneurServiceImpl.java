@@ -13,8 +13,10 @@ import com.bloodlinkproject.bloodlink.repository.DonneurRepository;
 import com.bloodlinkproject.bloodlink.services.DonneurService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class DonneurServiceImpl implements DonneurService {
     
@@ -36,11 +38,21 @@ public class DonneurServiceImpl implements DonneurService {
 
     @Override
     public String updatePosition(UUID donneurId,double latitude,double longitude){
+        // 🚨 LOG DE DÉBOGAGE 🚨
+        log.info("Tentative de mise à jour de position pour DonneId: {} vers Lat: {}, Lon: {}", donneurId, latitude, longitude);
+        
         Donneur donneur = donneurRepository.findById(donneurId).orElse(null);
+        
+        if (donneur == null) {
+            log.warn("Donneur non trouvé pour l'ID: {}", donneurId);
+            throw new RuntimeException("Donneur non trouvé"); 
+        }
+
         donneur.setLatitude(latitude);
         donneur.setLongitude(longitude);
-        donneurRepository.save(donneur);
-
+        donneurRepository.save(donneur); 
+        
+        log.info("Position mise à jour pour {}", donneur.getEmail());
         return "Position mis a jour avec success !!";
     }
 

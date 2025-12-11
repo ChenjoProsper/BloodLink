@@ -52,7 +52,7 @@ public class AlerteServiceImpl implements AlerteService {
 
     @Override
     public List<AlerteResult> getAlertesByMedecin(UUID medecinId) {
-        return alerteRepository.findByMedecinUserId(medecinId)
-                .stream().map(alerteMapper::toDto).toList();
+        return alerteRepository.findAlertesByMedecinOptimized(medecinId)
+                        .stream().map(alerteMapper::toDto).toList();
     }
 }

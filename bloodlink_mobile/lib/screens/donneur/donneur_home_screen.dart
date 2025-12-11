@@ -1,9 +1,10 @@
+// Fichier: screens/donneur_home_screen.dart (VERSION FINALE)
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/location_provider.dart';
-// import '../../providers/alerte_provider.dart';
 import '../../core/services/api_service.dart';
 import '../../core/services/storage_service.dart';
 import '../../widgets/alerte_card.dart';
@@ -34,6 +35,8 @@ class _DonneurHomeScreenState extends State<DonneurHomeScreen> {
   @override
   void initState() {
     super.initState();
+    // Le provider de location est souvent initialisé ici ou dans le main
+    // Assurez-vous d'appeler locationProvider.startLocationUpdates(); ailleurs.
     _initializeData();
   }
 
@@ -77,7 +80,6 @@ class _DonneurHomeScreenState extends State<DonneurHomeScreen> {
       }
 
       // Appel à l'endpoint /api/v1/alertes/actives/{groupeSanguin}
-      // 🚀 CORRECTION: Suppression de l'espace de fin dans l'URL pour correspondre au AlerteController
       final response = await _api
           .get('/api/v1/alertes/actives/${_donneurData!.groupeSanguin}');
 
@@ -104,21 +106,25 @@ class _DonneurHomeScreenState extends State<DonneurHomeScreen> {
 
   /// 💡 Nouvelle fonction pour charger l'historique des réponses du donneur
   Future<void> _loadHistory() async {
-    if (_donneurData == null) return;
+    // S'assurer que les données du donneur sont chargées avant d'appeler l'API
+    if (_donneurData == null || _donneurData!.userId == null) {
+      await _loadDonneurData();
+      if (_donneurData == null || _donneurData!.userId == null) return;
+    }
 
     setState(() {
       _isLoadingHistory = true;
     });
 
     try {
-      // Endpoint basé sur ReponseController.java: /api/v1/reponses/donneur/{donneurId}
+      // Endpoint basé sur ReponseController.java: GET /api/v1/reponses/donneur/{donneurId}
       final response =
           await _api.get('/api/v1/reponses/donneur/${_donneurData!.userId}');
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
         setState(() {
-          // NOTE: Le modèle ReponseResult est retourné ici.
+          // data contient List<ReponseResult>
           _responseHistory = data;
         });
       }
@@ -132,6 +138,7 @@ class _DonneurHomeScreenState extends State<DonneurHomeScreen> {
   }
 
   Future<void> _refreshData() async {
+    // Nous appelons _loadDonneurData ici pour actualiser le solde
     await _loadDonneurData();
     await _loadAlertes();
     // 💡 Actualiser l'historique
@@ -362,6 +369,7 @@ class _DonneurHomeScreenState extends State<DonneurHomeScreen> {
                           return Consumer<LocationProvider>(
                             builder: (context, locationProvider, _) {
                               double? distance;
+                              // 💡 Utilise les nouveaux champs latitude/longitude de l'alerte
                               if (_alertes[index].latitude != null &&
                                   _alertes[index].longitude != null &&
                                   locationProvider.currentPosition != null) {
@@ -484,19 +492,32 @@ class _DonneurHomeScreenState extends State<DonneurHomeScreen> {
 
                     // Assurez-vous que le backend renvoie le champ 'valide'
                     final isValide = response['valide'] == true;
+                    // Utiliser l'alerteId complet car il est requis pour les détails si on navigue
                     final alerteIdSnippet = response['alerteId'] != null
                         ? response['alerteId'].toString().substring(0, 8)
                         : 'Inconnue';
 
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),
+                      elevation: 1,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
                       child: ListTile(
-                        leading: Icon(
-                          isValide
-                              ? Icons.check_circle_outline
-                              : Icons.pending_actions,
-                          color:
-                              isValide ? AppColors.accent : AppColors.primary,
+                        leading: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: isValide
+                                ? AppColors.accent.withOpacity(0.1)
+                                : AppColors.primary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            isValide
+                                ? Icons.check_circle_outline
+                                : Icons.pending_actions,
+                            color:
+                                isValide ? AppColors.accent : AppColors.primary,
+                          ),
                         ),
                         title: Text(
                           'Réponse à l\'alerte $alerteIdSnippet...',
@@ -513,7 +534,8 @@ class _DonneurHomeScreenState extends State<DonneurHomeScreen> {
                             ),
                             if (response['dateReponse'] != null)
                               Text(
-                                'Date: ${response['dateReponse'].toString().split('T')[0]}', // Affichage simplifié de la date
+                                // Affichage simplifié de la date (ex: 2023-12-11)
+                                'Date: ${response['dateReponse'].toString().split('T')[0]}',
                                 style: const TextStyle(
                                     fontSize: 12,
                                     color: AppColors.textSecondary),

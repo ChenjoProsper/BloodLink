@@ -42,6 +42,24 @@ class AlerteProvider with ChangeNotifier {
     }
   }
 
+  /// NOUVEAU: Récupérer et mettre à jour les alertes du médecin (pour usage Provider)
+  Future<void> fetchMedecinAlertes(String medecinId) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final fetchedAlertes =
+          await _alerteService.getAlertesByMedecinId(medecinId);
+      _alertes = fetchedAlertes; // Mise à jour de la liste
+      _isLoading = false;
+    } catch (e) {
+      _errorMessage = 'Erreur lors du chargement des alertes: $e';
+      _isLoading = false;
+    }
+    notifyListeners();
+  }
+
   /// Récupérer les donneurs recommandés
   Future<List<dynamic>> getRecommendations(
       double latitude, double longitude) async {

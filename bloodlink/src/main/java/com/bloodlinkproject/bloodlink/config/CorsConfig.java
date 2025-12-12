@@ -18,9 +18,10 @@ public class CorsConfig {
         // CORRECTION ICI : Utiliser setAllowedOriginPatterns au lieu de setAllowedOrigins
         // Cela permet de gérer les ports dynamiques de Flutter (ex: localhost:39343)
         configuration.setAllowedOriginPatterns(Arrays.asList(
-            "http://localhost:*",  // Pour le web local
-            "http://127.0.0.1:*",  // Alternative web
-            "*"                    // (Optionnel) Autorise tout pour le dev
+            "http://localhost:*",
+            "http://127.0.0.1:*", 
+            "https://blood-link-eight-iota.vercel.app/",
+            "*"                    
         ));
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));

@@ -1,9 +1,7 @@
 # Étape 1 : Build (Compilation avec Maven)
 FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
-COPY pom.xml .
-COPY src ./src
-# Compile le projet et saute les tests pour accélérer le déploiement
+COPY . .
 RUN mvn clean package -DskipTests
 
 # Étape 2 : Runtime (Image légère pour l'exécution)

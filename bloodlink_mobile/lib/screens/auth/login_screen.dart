@@ -284,7 +284,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Assurez-vous que le serveur backend est démarré',
+                          'Assurez-vous que vous avez une connexion internet',
                           style: TextStyle(
                             color: Colors.blue[800],
                             fontSize: 12,

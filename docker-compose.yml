@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # --- Service Base de Données ---
+  db:
+    image: postgres:15-alpine
+    container_name: bloodlink_db
+    environment:
+      # Doit correspondre à votre application.properties
+      POSTGRES_USER: prosper 
+      POSTGRES_PASSWORD: prosper 
+      POSTGRES_DB: bloodlink_db 
+    ports:
+      - "5432:5432" # Optionnel: pour accéder à la DB depuis votre PC
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - bloodlink-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U prosper -d bloodlink_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # --- Service Backend (Spring Boot) ---
+  backend:
+    build: 
+      context: ./bloodlink # Chemin vers le dossier du backend
+      dockerfile: Dockerfile
+    container_name: bloodlink_backend
+    ports:
+      - "8000:8000" # Port défini dans server.port
+    environment:
+      # On surcharge l'URL pour pointer vers le service 'db' au lieu de 'localhost'
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/bloodlink_db
+      SPRING_DATASOURCE_USERNAME: prosper
+      SPRING_DATASOURCE_PASSWORD: prosper
+      # On garde les autres configs par défaut ou on les ajoute ici si nécessaire
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - bloodlink-network
+
+  # --- Service Frontend (Flutter Web) ---
+  frontend:
+    build:
+      context: ./bloodlink_mobile # Chemin vers le dossier du frontend
+      dockerfile: Dockerfile
+    container_name: bloodlink_frontend
+    ports:
+      - "80:80" # Accessible via http://localhost
+    depends_on:
+      - backend
+    networks:
+      - bloodlink-network
+
+volumes:
+  postgres_data:
+
+networks:
+  bloodlink-network:
+    driver: bridge

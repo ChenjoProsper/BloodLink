@@ -4,7 +4,7 @@ WORKDIR /app
 COPY pom.xml .
 COPY src ./src
 # Compile le projet et saute les tests pour accélérer le déploiement
-RUN mvn clean package
+RUN mvn clean package -DskipTests
 
 # Étape 2 : Runtime (Image légère pour l'exécution)
 FROM eclipse-temurin:21-jre-alpine
